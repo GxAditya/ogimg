@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, ChangeEvent } from "react";
-import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import { CaretLeft, DownloadSimple, CaretDown } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
@@ -422,11 +421,122 @@ export default function Editor({
         return inlineCss;
     };
 
+    const convertImagesToBase64 = async (node: HTMLElement) => {
+        const images = Array.from(node.querySelectorAll("img"));
+
+        await Promise.all(
+            images.map(async (img) => {
+                const src = img.src;
+                if (!src || src.startsWith("data:")) return;
+
+                try {
+                    const response = await fetch(src, { cache: "force-cache" });
+                    if (!response.ok) return;
+
+                    const blob = await response.blob();
+                    const reader = new FileReader();
+                    const dataUrl = await new Promise<string>((resolve, reject) => {
+                        reader.onload = () => resolve(reader.result as string);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+
+                    img.src = dataUrl;
+                } catch {
+                    // If we can't convert, leave the original src
+                }
+            })
+        );
+    };
+
+    const inlineComputedStyles = (source: HTMLElement, target: HTMLElement) => {
+        const sourceComputed = window.getComputedStyle(source);
+        const cssText: string[] = [];
+
+        for (let i = 0; i < sourceComputed.length; i++) {
+            const prop = sourceComputed[i];
+            const value = sourceComputed.getPropertyValue(prop);
+            cssText.push(`${prop}:${value}`);
+        }
+
+        target.setAttribute("style", cssText.join(";"));
+
+        const sourceChildren = source.children;
+        const targetChildren = target.children;
+
+        for (let i = 0; i < sourceChildren.length; i++) {
+            if (sourceChildren[i] instanceof HTMLElement && targetChildren[i] instanceof HTMLElement) {
+                inlineComputedStyles(sourceChildren[i] as HTMLElement, targetChildren[i] as HTMLElement);
+            }
+        }
+    };
+
+    const inlineComputedStylesForPseudoElements = (source: HTMLElement, target: HTMLElement) => {
+        for (const pseudo of ["::before", "::after"] as const) {
+            const computed = window.getComputedStyle(source, pseudo);
+            const content = computed.getPropertyValue("content");
+
+            if (!content || content === "none" || content === "normal") continue;
+
+            const pseudoSpan = document.createElement("span");
+            pseudoSpan.setAttribute("data-pseudo", pseudo);
+
+            const cssText: string[] = [];
+            for (let i = 0; i < computed.length; i++) {
+                const prop = computed[i];
+                const value = computed.getPropertyValue(prop);
+                cssText.push(`${prop}:${value}`);
+            }
+            pseudoSpan.setAttribute("style", cssText.join(";"));
+            pseudoSpan.textContent = content.replace(/^["']|["']$/g, "");
+
+            if (pseudo === "::before") {
+                target.insertBefore(pseudoSpan, target.firstChild);
+            } else {
+                target.appendChild(pseudoSpan);
+            }
+        }
+
+        const sourceChildren = source.children;
+        const targetChildren = target.children;
+
+        for (let i = 0; i < sourceChildren.length; i++) {
+            if (sourceChildren[i] instanceof HTMLElement && targetChildren[i] instanceof HTMLElement) {
+                inlineComputedStylesForPseudoElements(sourceChildren[i] as HTMLElement, targetChildren[i] as HTMLElement);
+            }
+        }
+    };
+
+    const renderToCanvas = (svgDataUrl: string, width: number, height: number, scale: number): Promise<HTMLCanvasElement> => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                canvas.width = width * scale;
+                canvas.height = height * scale;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) {
+                    reject(new Error("Failed to get canvas 2d context"));
+                    return;
+                }
+                ctx.scale(scale, scale);
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas);
+            };
+            img.onerror = () => reject(new Error("Failed to load SVG image for canvas rendering"));
+            img.src = svgDataUrl;
+        });
+    };
+
     const handleExport = async () => {
         const sourceNode = document.getElementById("og-template-node");
         if (!sourceNode) return;
 
         setIsExporting(true);
+
+        const WIDTH = 1200;
+        const HEIGHT = 630;
+        const SCALE = 2;
 
         const exportHost = document.createElement("div");
         exportHost.setAttribute("aria-hidden", "true");
@@ -434,8 +544,8 @@ export default function Editor({
             "position: fixed",
             "left: 0",
             "top: 0",
-            "width: 1200px",
-            "height: 630px",
+            `width: ${WIDTH}px`,
+            `height: ${HEIGHT}px`,
             "overflow: hidden",
             "pointer-events: none",
             "z-index: -2147483647",
@@ -444,8 +554,8 @@ export default function Editor({
 
         const exportNode = sourceNode.cloneNode(true) as HTMLElement;
         exportNode.removeAttribute("id");
-        exportNode.style.width = "1200px";
-        exportNode.style.height = "630px";
+        exportNode.style.width = `${WIDTH}px`;
+        exportNode.style.height = `${HEIGHT}px`;
         exportNode.style.transform = "none";
         exportNode.style.margin = "0";
 
@@ -455,80 +565,89 @@ export default function Editor({
         try {
             await waitForTemplateFontsToLoad();
             await waitForImagesToLoad(exportNode);
-            const inlineFontCss = await getInlineFontCssForExport(fontId);
-            const exportFontIds = getFontIdsForExport(fontId);
+            await convertImagesToBase64(exportNode);
 
-            const sharedOptions = {
-                scale: 2,
-                useCORS: true,
-                allowTaint: false,
-                logging: false,
-                width: 1200,
-                height: 630,
-                imageTimeout: 15000,
-                backgroundColor: exportFormat === "jpeg" ? "#ffffff" : null,
-                onclone: async (clonedDocument: Document, clonedReferenceElement: HTMLElement) => {
-                    const fontStyleTag = clonedDocument.createElement("style");
-                    fontStyleTag.setAttribute("data-ogimg-fonts", "true");
-                    fontStyleTag.textContent = `${inlineFontCss}\n#og-template-node,#og-template-node *{font-family:${getTemplateFontFamily(fontId)} !important;}`;
-                    clonedDocument.head.appendChild(fontStyleTag);
+            // Inline all computed styles so the SVG foreignObject doesn't need CSS resolution
+            inlineComputedStyles(sourceNode, exportNode);
+            inlineComputedStylesForPseudoElements(sourceNode, exportNode);
 
-                    const clonedTemplateNode = clonedReferenceElement as HTMLElement;
-                    clonedTemplateNode.style.fontFamily = getTemplateFontFamily(fontId);
-
-                    if (clonedDocument.fonts) {
-                        const cloneFontLoads: Array<Promise<FontFace[]>> = [];
-
-                        cloneFontLoads.push(
-                            ...["400", "600", "700"].map((weight) =>
-                                clonedDocument.fonts.load(`${weight} 16px "${getTemplateFontFaceName(fontId)}"`)
-                            )
-                        );
-
-                        for (const exportFontId of exportFontIds) {
-                            const exportFamily = EXPORT_FONT_FILES[exportFontId].family;
-                            cloneFontLoads.push(clonedDocument.fonts.load(`400 16px "${exportFamily}"`));
-                        }
-
-                        await Promise.all(
-                            cloneFontLoads
-                        );
-                        await clonedDocument.fonts.ready;
-                    }
-                },
-            };
-
-            let canvas: HTMLCanvasElement;
-            try {
-                canvas = await html2canvas(exportNode, {
-                    ...sharedOptions,
-                    foreignObjectRendering: true,
-                });
-            } catch (foreignObjectRenderError) {
-                console.warn("foreignObject export failed, retrying with standard renderer.", foreignObjectRenderError);
-                canvas = await html2canvas(exportNode, {
-                    ...sharedOptions,
-                    foreignObjectRendering: false,
-                });
-            }
-
-            const mimeType = exportFormat === "png" ? "image/png" : exportFormat === "jpeg" ? "image/jpeg" : "image/webp";
-            const fileExtension = exportFormat;
-            const quality = exportFormat === "png" ? undefined : 0.95;
-
-            const blob = await new Promise<Blob | null>((resolve) => {
-                canvas.toBlob((generatedBlob) => {
-                    resolve(generatedBlob);
-                }, mimeType, quality);
+            // Force the correct font family on all elements
+            const fontFamily = getTemplateFontFamily(fontId);
+            const allElements = exportNode.querySelectorAll("*");
+            exportNode.style.fontFamily = fontFamily;
+            allElements.forEach((el) => {
+                if (el instanceof HTMLElement) {
+                    el.style.fontFamily = fontFamily;
+                }
             });
 
-            if (!blob) {
-                throw new Error("Failed to generate exported image.");
-            }
+            // Ensure dimensions are set correctly after inlining
+            exportNode.style.width = `${WIDTH}px`;
+            exportNode.style.height = `${HEIGHT}px`;
+            exportNode.style.transform = "none";
+            exportNode.style.margin = "0";
+            exportNode.style.overflow = "hidden";
+            exportNode.style.position = "relative";
 
-            saveAs(blob, `og-image-export.${fileExtension}`);
+            // Get base64-encoded font CSS
+            const inlineFontCss = await getInlineFontCssForExport(fontId);
+
+            // Remove all class attributes since styles are inlined
+            exportNode.removeAttribute("class");
+            allElements.forEach((el) => el.removeAttribute("class"));
+
+            // Serialize the export node HTML
+            const serializedHtml = new XMLSerializer().serializeToString(exportNode);
+
+            // Build the SVG with foreignObject
+            const svgMarkup = `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}">
+  <defs>
+    <style type="text/css">
+${inlineFontCss}
+    </style>
+  </defs>
+  <foreignObject width="100%" height="100%">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="width:${WIDTH}px;height:${HEIGHT}px;overflow:hidden;">
+      ${serializedHtml}
+    </div>
+  </foreignObject>
+</svg>`;
+
+            // Use a data URL (not blob URL) to avoid tainting the canvas
+            const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
+
+            const canvas = await renderToCanvas(svgDataUrl, WIDTH, HEIGHT, SCALE);
+
+            // For JPEG, draw white background first
+            if (exportFormat === "jpeg") {
+                const jpegCanvas = document.createElement("canvas");
+                jpegCanvas.width = WIDTH * SCALE;
+                jpegCanvas.height = HEIGHT * SCALE;
+                const jpegCtx = jpegCanvas.getContext("2d");
+                if (jpegCtx) {
+                    jpegCtx.fillStyle = "#ffffff";
+                    jpegCtx.fillRect(0, 0, jpegCanvas.width, jpegCanvas.height);
+                    jpegCtx.drawImage(canvas, 0, 0);
+
+                    const mimeType = "image/jpeg";
+                    const blob = await new Promise<Blob | null>((resolve) => {
+                        jpegCanvas.toBlob((b) => resolve(b), mimeType, 0.95);
+                    });
+                    if (!blob) throw new Error("Failed to generate exported image.");
+                    saveAs(blob, `og-image-export.${exportFormat}`);
+                }
+            } else {
+                const mimeType = exportFormat === "png" ? "image/png" : "image/webp";
+                const quality = exportFormat === "png" ? undefined : 0.95;
+
+                const blob = await new Promise<Blob | null>((resolve) => {
+                    canvas.toBlob((b) => resolve(b), mimeType, quality);
+                });
+                if (!blob) throw new Error("Failed to generate exported image.");
+                saveAs(blob, `og-image-export.${exportFormat}`);
+            }
         } catch (err) {
-            console.error(err);
+            console.error("Export failed:", err);
         } finally {
             exportHost.remove();
             setIsExporting(false);
