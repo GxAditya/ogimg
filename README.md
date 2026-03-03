@@ -21,9 +21,7 @@
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License" /></a>
 </p>
 
-<p align="center">
-  <a href="https://github.com/GxAditya/ogimg">GitHub Repo</a>
-</p>
+
 
 ## About
 `ogimg.in` helps you generate social preview images (Open Graph / Twitter) quickly without opening a design tool.
