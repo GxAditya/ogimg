@@ -273,9 +273,14 @@ export default function LandingPage() {
               Start Creating
               <Export weight="bold" />
             </Link>
-            <Link href="/template-gallery" className="h-12 px-8 border border-zinc-800 bg-zinc-950 hover:bg-zinc-900 font-semibold rounded transition-all flex items-center gap-2">
-              <SquaresFour weight="bold" />
-              View Templates
+            <Link
+              href="https://github.com/GxAditya/ogimg"
+              target="_blank"
+              rel="noreferrer"
+              className="h-12 px-8 border border-zinc-800 bg-zinc-950 hover:bg-zinc-900 font-semibold rounded transition-all flex items-center gap-2"
+            >
+              <GithubLogo weight="bold" />
+              GitHub
             </Link>
           </div>
         </div>
