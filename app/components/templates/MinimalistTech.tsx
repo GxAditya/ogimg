@@ -102,10 +102,8 @@ export default function MinimalistTech({
 
                 <div className="flex items-end justify-end w-full">
                     {image && (
-                        <div className="absolute right-[-150px] top-[98px] w-[760px] h-[500px] rounded-l-2xl overflow-hidden border border-black/30 shadow-[0_24px_110px_rgba(0,0,0,0.45)]">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={image} alt="app screenshot" className="w-full h-full object-cover" />
-                        </div>
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={image} alt="app screenshot" className="absolute right-0 top-[98px] w-[700px] h-[460px] object-contain object-center" />
                     )}
                 </div>
             </div>

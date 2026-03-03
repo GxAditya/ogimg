@@ -94,10 +94,10 @@ export default function AppShowcase({
                 </div>
 
                 <div className="mt-8 flex-1 flex items-center justify-center">
-                    <div className="relative w-[700px] aspect-video overflow-hidden rounded-[14px] border border-black/28 shadow-[0_18px_60px_rgba(2,6,23,0.34)] bg-transparent flex items-center justify-center">
+                    <div className="relative w-[700px] aspect-video overflow-hidden flex items-center justify-center">
                         {hasImage ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={image} alt="full app UI preview" className="h-full w-full object-cover" />
+                            <img src={image} alt="full app UI preview" className="h-full w-full object-contain object-center" />
                         ) : (
                             <div className="text-center px-10">
                                 <p className="text-[32px] tracking-[-0.032em] leading-[1.05]" style={{ color: placeholderColor }}>

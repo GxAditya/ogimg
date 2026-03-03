@@ -83,7 +83,126 @@ const GRADIENT_DIRECTIONS = [
     { label: "↖", angle: 315 },
 ] as const;
 
-const FONT_STYLESHEET_URL = "/fonts/fonts.css";
+type ExportFontSource = {
+    path: string;
+    weight: string;
+};
+
+type ExportFontDefinition = {
+    family: string;
+    sources: ExportFontSource[];
+};
+
+const EXPORT_FONT_FILES: Record<TemplateFontId, ExportFontDefinition> = {
+    "geist-sans": {
+        family: "Geist Sans",
+        sources: [{ path: "/fonts/geist-sans/geist-sans-variable.woff2", weight: "100 900" }],
+    },
+    "geist-mono": {
+        family: "Geist Mono",
+        sources: [{ path: "/fonts/geist-mono/geist-mono-variable.woff2", weight: "100 900" }],
+    },
+    "geist-pixel-square": {
+        family: "Geist Pixel Square",
+        sources: [{ path: "/fonts/geist-pixel/geist-pixel-square.woff2", weight: "400" }],
+    },
+    "geist-pixel-grid": {
+        family: "Geist Pixel Grid",
+        sources: [{ path: "/fonts/geist-pixel/geist-pixel-grid.woff2", weight: "400" }],
+    },
+    "geist-pixel-circle": {
+        family: "Geist Pixel Circle",
+        sources: [{ path: "/fonts/geist-pixel/geist-pixel-circle.woff2", weight: "400" }],
+    },
+    "geist-pixel-triangle": {
+        family: "Geist Pixel Triangle",
+        sources: [{ path: "/fonts/geist-pixel/geist-pixel-triangle.woff2", weight: "400" }],
+    },
+    "geist-pixel-line": {
+        family: "Geist Pixel Line",
+        sources: [{ path: "/fonts/geist-pixel/geist-pixel-line.woff2", weight: "400" }],
+    },
+    inter: {
+        family: "Inter",
+        sources: [
+            { path: "/fonts/inter/inter-400.woff2", weight: "400" },
+            { path: "/fonts/inter/inter-600.woff2", weight: "600" },
+            { path: "/fonts/inter/inter-700.woff2", weight: "700" },
+        ],
+    },
+    poppins: {
+        family: "Poppins",
+        sources: [
+            { path: "/fonts/poppins/poppins-400.woff2", weight: "400" },
+            { path: "/fonts/poppins/poppins-600.woff2", weight: "600" },
+            { path: "/fonts/poppins/poppins-700.woff2", weight: "700" },
+        ],
+    },
+    "dm-sans": {
+        family: "DM Sans",
+        sources: [
+            { path: "/fonts/dm-sans/dm-sans-400.woff2", weight: "400" },
+            { path: "/fonts/dm-sans/dm-sans-600.woff2", weight: "600" },
+            { path: "/fonts/dm-sans/dm-sans-700.woff2", weight: "700" },
+        ],
+    },
+    "playfair-display": {
+        family: "Playfair Display",
+        sources: [
+            { path: "/fonts/playfair-display/playfair-display-400.woff2", weight: "400" },
+            { path: "/fonts/playfair-display/playfair-display-600.woff2", weight: "600" },
+            { path: "/fonts/playfair-display/playfair-display-700.woff2", weight: "700" },
+        ],
+    },
+    "space-grotesk": {
+        family: "Space Grotesk",
+        sources: [
+            { path: "/fonts/space-grotesk/space-grotesk-400.woff2", weight: "400" },
+            { path: "/fonts/space-grotesk/space-grotesk-600.woff2", weight: "600" },
+            { path: "/fonts/space-grotesk/space-grotesk-700.woff2", weight: "700" },
+        ],
+    },
+    montserrat: {
+        family: "Montserrat",
+        sources: [
+            { path: "/fonts/montserrat/montserrat-400.woff2", weight: "400" },
+            { path: "/fonts/montserrat/montserrat-600.woff2", weight: "600" },
+            { path: "/fonts/montserrat/montserrat-700.woff2", weight: "700" },
+        ],
+    },
+    lora: {
+        family: "Lora",
+        sources: [
+            { path: "/fonts/lora/lora-400.woff2", weight: "400" },
+            { path: "/fonts/lora/lora-600.woff2", weight: "600" },
+            { path: "/fonts/lora/lora-700.woff2", weight: "700" },
+        ],
+    },
+    outfit: {
+        family: "Outfit",
+        sources: [
+            { path: "/fonts/outfit/outfit-400.woff2", weight: "400" },
+            { path: "/fonts/outfit/outfit-600.woff2", weight: "600" },
+            { path: "/fonts/outfit/outfit-700.woff2", weight: "700" },
+        ],
+    },
+    manrope: {
+        family: "Manrope",
+        sources: [
+            { path: "/fonts/manrope/manrope-400.woff2", weight: "400" },
+            { path: "/fonts/manrope/manrope-600.woff2", weight: "600" },
+            { path: "/fonts/manrope/manrope-700.woff2", weight: "700" },
+        ],
+    },
+    sora: {
+        family: "Sora",
+        sources: [
+            { path: "/fonts/sora/sora-400.woff2", weight: "400" },
+            { path: "/fonts/sora/sora-600.woff2", weight: "600" },
+            { path: "/fonts/sora/sora-700.woff2", weight: "700" },
+        ],
+    },
+};
 
 export default function Editor({
     onBack,
@@ -154,6 +273,7 @@ export default function Editor({
     const previewContainerRef = useRef<HTMLDivElement>(null);
     const logoInputRef = useRef<HTMLInputElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
+    const inlineFontCssCacheRef = useRef<Partial<Record<TemplateFontId, string>>>({});
 
     useEffect(() => {
         const container = previewContainerRef.current;
@@ -248,13 +368,58 @@ export default function Editor({
         await document.fonts.ready;
     };
 
-    const getFontStylesheetText = async () => {
-        const response = await fetch(FONT_STYLESHEET_URL, { cache: "force-cache" });
-        if (!response.ok) {
-            throw new Error(`Failed to load font stylesheet (${response.status}).`);
+    const getFontIdsForExport = (targetFontId: TemplateFontId): TemplateFontId[] => {
+        if (targetFontId.startsWith("geist-pixel")) {
+            return [targetFontId, "geist-mono"];
         }
 
-        return response.text();
+        return [targetFontId];
+    };
+
+    const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+        const bytes = new Uint8Array(buffer);
+        const chunkSize = 0x8000;
+        let binary = "";
+
+        for (let index = 0; index < bytes.length; index += chunkSize) {
+            const chunk = bytes.subarray(index, index + chunkSize);
+            binary += String.fromCharCode(...chunk);
+        }
+
+        return btoa(binary);
+    };
+
+    const getInlineFontCssForExport = async (targetFontId: TemplateFontId) => {
+        const cachedCss = inlineFontCssCacheRef.current[targetFontId];
+        if (cachedCss) {
+            return cachedCss;
+        }
+
+        const fontIdsToEmbed = getFontIdsForExport(targetFontId);
+        const rules: string[] = [];
+
+        for (const exportFontId of fontIdsToEmbed) {
+            const fontDefinition = EXPORT_FONT_FILES[exportFontId];
+            for (const source of fontDefinition.sources) {
+                const absoluteFontUrl = new URL(source.path, window.location.origin).toString();
+                const response = await fetch(absoluteFontUrl, { cache: "force-cache" });
+                if (!response.ok) {
+                    throw new Error(`Failed to load font file: ${source.path}`);
+                }
+
+                const fontBuffer = await response.arrayBuffer();
+                const base64Font = arrayBufferToBase64(fontBuffer);
+
+                rules.push(
+                    `@font-face{font-family:"${fontDefinition.family}";src:url("data:font/woff2;base64,${base64Font}") format("woff2");font-style:normal;font-weight:${source.weight};font-display:swap;}`
+                );
+            }
+        }
+
+        const inlineCss = rules.join("\n");
+        inlineFontCssCacheRef.current[targetFontId] = inlineCss;
+
+        return inlineCss;
     };
 
     const handleExport = async () => {
@@ -290,7 +455,8 @@ export default function Editor({
         try {
             await waitForTemplateFontsToLoad();
             await waitForImagesToLoad(exportNode);
-            const fontStylesheetText = await getFontStylesheetText();
+            const inlineFontCss = await getInlineFontCssForExport(fontId);
+            const exportFontIds = getFontIdsForExport(fontId);
 
             const sharedOptions = {
                 scale: 2,
@@ -304,18 +470,28 @@ export default function Editor({
                 onclone: async (clonedDocument: Document, clonedReferenceElement: HTMLElement) => {
                     const fontStyleTag = clonedDocument.createElement("style");
                     fontStyleTag.setAttribute("data-ogimg-fonts", "true");
-                    fontStyleTag.textContent = fontStylesheetText;
+                    fontStyleTag.textContent = `${inlineFontCss}\n#og-template-node,#og-template-node *{font-family:${getTemplateFontFamily(fontId)} !important;}`;
                     clonedDocument.head.appendChild(fontStyleTag);
 
                     const clonedTemplateNode = clonedReferenceElement as HTMLElement;
                     clonedTemplateNode.style.fontFamily = getTemplateFontFamily(fontId);
 
                     if (clonedDocument.fonts) {
-                        const targetFace = getTemplateFontFaceName(fontId);
-                        await Promise.all(
-                            ["400", "600", "700"].map((weight) =>
-                                clonedDocument.fonts.load(`${weight} 16px "${targetFace}"`)
+                        const cloneFontLoads: Array<Promise<FontFace[]>> = [];
+
+                        cloneFontLoads.push(
+                            ...["400", "600", "700"].map((weight) =>
+                                clonedDocument.fonts.load(`${weight} 16px "${getTemplateFontFaceName(fontId)}"`)
                             )
+                        );
+
+                        for (const exportFontId of exportFontIds) {
+                            const exportFamily = EXPORT_FONT_FILES[exportFontId].family;
+                            cloneFontLoads.push(clonedDocument.fonts.load(`400 16px "${exportFamily}"`));
+                        }
+
+                        await Promise.all(
+                            cloneFontLoads
                         );
                         await clonedDocument.fonts.ready;
                     }

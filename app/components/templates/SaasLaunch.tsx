@@ -67,10 +67,10 @@ export default function SaasLaunch({
             )}
 
             <div className="relative z-10 h-full w-full px-14 py-12 flex gap-10">
-                <div className="w-[54%] h-full rounded-[18px] border border-white/18 bg-black/18 overflow-hidden flex items-center justify-center">
+                <div className="w-[54%] h-full overflow-hidden flex items-center justify-center">
                     {hasImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={image} alt="dashboard screenshot" className="w-full h-full object-cover" />
+                        <img src={image} alt="dashboard screenshot" className="w-full h-full object-contain object-center" />
                     ) : null}
                 </div>
 

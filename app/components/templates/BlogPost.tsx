@@ -68,15 +68,15 @@ export default function BlogPost({
 
             <div className="relative z-10 h-full w-full px-12 py-10 flex gap-8">
                 <div
-                    className="w-[44%] rounded-2xl overflow-hidden flex items-center justify-center"
-                    style={{
+                    className={`${hasImage ? "w-[44%] overflow-hidden flex items-center justify-center" : "w-[44%] rounded-2xl overflow-hidden flex items-center justify-center"}`}
+                    style={hasImage ? undefined : {
                         border: `1px solid ${slotBorder}`,
-                        backgroundColor: hasImage ? undefined : slotTint,
+                        backgroundColor: slotTint,
                     }}
                 >
                     {hasImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={image} alt="guest visual" className="w-full h-full object-cover" />
+                        <img src={image} alt="guest visual" className="w-full h-full object-contain object-center" />
                     ) : (
                         <p className="text-[44px] tracking-[0.07em]" style={{ color: markColor }}>
                             {brandMark}
