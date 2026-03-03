@@ -1,32 +1,135 @@
 "use client";
 
 import {
-  ImageSquare,
   Export,
   Download,
-  PaintBrush,
   TextAa,
   SquaresFour,
   Globe,
-  Lightning,
   Sparkle,
   CheckCircle,
   CaretDown,
   GithubLogo,
   TwitterLogo
 } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { GeistPixelSquare } from "geist/font/pixel";
 import { motion, AnimatePresence } from "framer-motion";
+import Editor from "./components/Editor";
+import { DEFAULT_TEMPLATE_ID, TEMPLATE_LIBRARY, TemplateId, getTemplateById } from "./components/templates/templateRegistry";
+import MinimalistTech from "./components/templates/MinimalistTech";
+import AppShowcase from "./components/templates/AppShowcase";
+import CenteredContainer from "./components/templates/CenteredContainer";
+import BrandPitch from "./components/templates/BrandPitch";
+import EditorialPixel from "./components/templates/EditorialPixel";
+import SaasLaunch from "./components/templates/SaasLaunch";
+import BlogPost from "./components/templates/BlogPost";
+import PodcastCover from "./components/templates/PodcastCover";
+import Changelog from "./components/templates/Changelog";
+import type { TemplateProps } from "./components/templates/templateShared";
+
+function TemplateGalleryPreview({
+  templateId,
+}: {
+  templateId: TemplateId;
+}) {
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const [previewScale, setPreviewScale] = useState(1);
+  const template = getTemplateById(templateId);
+  const defaults = template.defaults;
+
+  useEffect(() => {
+    const container = previewContainerRef.current;
+    if (!container) return;
+
+    const calculateScale = () => {
+      const widthScale = container.clientWidth / 1200;
+      const heightScale = container.clientHeight / 630;
+      setPreviewScale(Math.min(widthScale, heightScale, 1));
+    };
+
+    calculateScale();
+
+    const observer = new ResizeObserver(calculateScale);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  const templateProps: TemplateProps = {
+    title: defaults.title,
+    textColor: defaults.textColor,
+    logoImage: "/ogimg.png",
+    image: template.supportsImage ? defaults.image || undefined : undefined,
+    tag: defaults.tag,
+    logo: defaults.logo,
+    detailOne: defaults.detailOne,
+    detailTwo: defaults.detailTwo,
+    detailThree: defaults.detailThree,
+    fontStyle: "normal",
+    fontWeight: "bold",
+    textDecoration: "none",
+    fontFamily: templateId === "changelog" ? "var(--font-geist-mono)" : "var(--font-geist-sans)",
+    backgroundMode: defaults.backgroundMode,
+    gradientStart: defaults.gradientStart,
+    gradientEnd: defaults.gradientEnd,
+    gradientAngle: defaults.gradientAngle,
+    gridOverlay: defaults.gridOverlay,
+    gridColor: defaults.gridColor,
+    gridOpacity: defaults.gridOpacity,
+    gridBlur: defaults.gridBlur,
+  };
+
+  const renderTemplate = () => {
+    switch (templateId) {
+      case "app-showcase":
+        return <AppShowcase {...templateProps} />;
+      case "centered-container":
+        return <CenteredContainer {...templateProps} />;
+      case "brand-pitch":
+        return <BrandPitch {...templateProps} />;
+      case "editorial-pixel":
+        return <EditorialPixel {...templateProps} />;
+      case "saas-launch":
+        return <SaasLaunch {...templateProps} />;
+      case "blog-post":
+        return <BlogPost {...templateProps} />;
+      case "podcast-cover":
+        return <PodcastCover {...templateProps} />;
+      case "changelog":
+        return <Changelog {...templateProps} />;
+      case "minimalist-tech":
+      default:
+        return <MinimalistTech {...templateProps} />;
+    }
+  };
+
+  return (
+    <div ref={previewContainerRef} className="aspect-1200/630 relative overflow-hidden flex items-center justify-center">
+      <div
+        className="shrink-0"
+        style={{
+          width: "1200px",
+          height: "630px",
+          transform: `scale(${previewScale})`,
+          transformOrigin: "center center",
+        }}
+      >
+        {renderTemplate()}
+      </div>
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const [activeFAQ, setActiveFAQ] = useState<number | null>(null);
+  const [activeTemplate, setActiveTemplate] = useState<TemplateId | null>(null);
 
   // Interactive Editor State
   const [editorData, setEditorData] = useState({
-    title: "Introducing New Features",
-    subtitle: "The fastest way to generate open graph images dynamically.",
-    author: "Aditya",
+    title: "Create beautiful OG images for free.",
+    subtitle: "The fastest way to generate open graph images directly in your browser.",
+    author: "ogimg.in",
   });
 
   const faqs = [
@@ -56,12 +159,16 @@ export default function LandingPage() {
     }
   ];
 
+  if (activeTemplate) {
+    return <Editor key={activeTemplate} onBack={() => setActiveTemplate(null)} templateId={activeTemplate} />;
+  }
+
   return (
     <div className="min-h-screen font-sans selection:bg-primary selection:text-primary-foreground tracking-[-0.04em]">
       <nav className="absolute top-0 inset-x-0 z-50 bg-transparent">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 w-1/3">
-            <ImageSquare size={24} weight="duotone" className="text-foreground" />
+            <Image src="/ogimg.png" alt="ogimg logo" width={28} height={28} className="rounded-sm bg-white p-0.5" />
             <span className={`text-xl ${GeistPixelSquare.className} tracking-[-0.05em]`}>ogimg.in</span>
           </div>
           <div className="flex gap-6 items-center justify-center w-1/3">
@@ -69,7 +176,10 @@ export default function LandingPage() {
             <a href="#how-it-works" className="text-sm font-medium hover:text-foreground hover:underline underline-offset-4 transition-all">How it works</a>
           </div>
           <div className="flex items-center justify-end w-1/3">
-            <button className="bg-foreground text-background px-4 py-2 rounded text-sm font-semibold hover:bg-foreground/90 transition-colors">
+            <button
+              onClick={() => setActiveTemplate(DEFAULT_TEMPLATE_ID)}
+              className="bg-foreground text-background px-4 py-2 rounded text-sm font-semibold hover:bg-foreground/90 transition-colors"
+            >
               Get Started
             </button>
           </div>
@@ -90,17 +200,19 @@ export default function LandingPage() {
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto tracking-[-0.03em]">
             Generate perfectly sized, beautiful OG images for your site from pre-existing elegant templates.
-            Zero design skills required.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button className="h-12 px-8 bg-foreground text-background font-semibold rounded hover:bg-foreground/90 transition-all flex items-center gap-2">
+            <button
+              onClick={() => setActiveTemplate(DEFAULT_TEMPLATE_ID)}
+              className="h-12 px-8 bg-foreground text-background font-semibold rounded hover:bg-foreground/90 transition-all flex items-center gap-2"
+            >
               Start Creating
               <Export weight="bold" />
             </button>
-            <button className="h-12 px-8 border border-border bg-card/50 hover:bg-accent font-semibold rounded transition-all flex items-center gap-2">
+            <a href="#templates" className="h-12 px-8 border border-border bg-card/50 hover:bg-accent font-semibold rounded transition-all flex items-center gap-2">
               <SquaresFour weight="bold" />
               View Templates
-            </button>
+            </a>
           </div>
         </div>
       </section>
@@ -206,30 +318,15 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { name: "Minimalist Tech", id: 1 },
-              { name: "Editorial Pixel", id: 2 },
-              { name: "SaaS Launch", id: 3 },
-              { name: "Blog Post", id: 4 },
-              { name: "Podcast Cover", id: 5 },
-              { name: "Changelog", id: 6 },
-            ].map((tmpl) => (
-              <div key={tmpl.id} className="group relative rounded-xl border border-border bg-card overflow-hidden hover:border-ring transition-colors cursor-pointer">
-                {/* Mockup Preview */}
-                <div className="aspect-1200/630 bg-zinc-900 border-b border-border flex flex-col items-center justify-center p-6 relative">
-                  <div className="absolute top-2 left-2 flex gap-1">
-                    <div className="w-2 h-2 rounded-full bg-zinc-700" />
-                    <div className="w-2 h-2 rounded-full bg-zinc-700" />
-                  </div>
-                  <h4 className={`text-white text-xl font-bold mb-2 ${GeistPixelSquare.className}`}>{tmpl.name}</h4>
-                  <div className="h-2 w-3/4 bg-zinc-800 rounded-full" />
-                </div>
-                <div className="p-4 flex items-center justify-between">
-                  <span className="font-medium text-sm tracking-tight">{tmpl.name}</span>
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center bg-foreground text-background w-8 h-8 rounded-full">
-                    <PaintBrush size={14} weight="bold" />
-                  </div>
-                </div>
+            {TEMPLATE_LIBRARY.map((tmpl) => (
+              <div
+                key={tmpl.id}
+                className="relative rounded-xl border border-border bg-card overflow-hidden hover:border-ring transition-colors cursor-pointer"
+                onClick={() => setActiveTemplate(tmpl.id)}
+              >
+                <TemplateGalleryPreview
+                  templateId={tmpl.id}
+                />
               </div>
             ))}
           </div>
@@ -366,7 +463,7 @@ export default function LandingPage() {
       <footer className="bg-background pt-10 pb-10 px-6 border-t border-border mt-24">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <ImageSquare size={20} weight="duotone" />
+            <Image src="/ogimg.png" alt="ogimg logo" width={24} height={24} className="rounded-sm bg-white p-0.5" />
             <span className={`font-bold ${GeistPixelSquare.className}`}>ogimg.in</span>
           </div>
           <p className="text-sm text-muted-foreground">© 2026 ogimg.in. All rights reserved.</p>

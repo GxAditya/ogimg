@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ogimg.in - Create Beautiful Open Graph Images",
   description: "Create open graph images for your website from pre-existing templates. Fill your info and download PNG/JPG.",
+  icons: {
+    icon: "/ogimg.png",
+    shortcut: "/ogimg.png",
+    apple: "/ogimg.png",
+  },
 };
 
 export default function RootLayout({
