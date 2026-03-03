@@ -12,24 +12,193 @@ import {
   GithubLogo,
   XLogo
 } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { GeistPixelSquare } from "geist/font/pixel";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { TEMPLATE_LIBRARY } from "./components/templates/templateRegistry";
 import TemplateGalleryPreview from "./components/TemplateGalleryPreview";
+
+type ResultShot = {
+  id: number;
+  src: string;
+  alt: string;
+  sizeClass: string;
+  entryX: number;
+  entryY: number;
+  entryRotate: number;
+  exitX: number;
+  exitY: number;
+  exitRotate: number;
+};
+
+const RESULT_SHOTS: ResultShot[] = [
+  {
+    id: 1,
+    src: "/1.webp",
+    alt: "Open Graph result sample 1",
+    sizeClass: "w-[min(88vw,760px)]",
+    entryX: -720,
+    entryY: -360,
+    entryRotate: -24,
+    exitX: 760,
+    exitY: -140,
+    exitRotate: 14
+  },
+  {
+    id: 2,
+    src: "/2.webp",
+    alt: "Open Graph result sample 2",
+    sizeClass: "w-[min(88vw,720px)]",
+    entryX: 690,
+    entryY: -320,
+    entryRotate: 20,
+    exitX: -760,
+    exitY: -80,
+    exitRotate: -16
+  },
+  {
+    id: 3,
+    src: "/3.webp",
+    alt: "Open Graph result sample 3",
+    sizeClass: "w-[min(88vw,740px)]",
+    entryX: -760,
+    entryY: -120,
+    entryRotate: -18,
+    exitX: 680,
+    exitY: 320,
+    exitRotate: 14
+  },
+  {
+    id: 4,
+    src: "/4.webp",
+    alt: "Open Graph result sample 4",
+    sizeClass: "w-[min(88vw,710px)]",
+    entryX: 760,
+    entryY: -40,
+    entryRotate: 16,
+    exitX: -720,
+    exitY: 300,
+    exitRotate: -14
+  },
+  {
+    id: 5,
+    src: "/5.webp",
+    alt: "Open Graph result sample 5",
+    sizeClass: "w-[min(88vw,760px)]",
+    entryX: 0,
+    entryY: 700,
+    entryRotate: -8,
+    exitX: 0,
+    exitY: -720,
+    exitRotate: 8
+  },
+  {
+    id: 6,
+    src: "/6.webp",
+    alt: "Open Graph result sample 6",
+    sizeClass: "w-[min(88vw,730px)]",
+    entryX: -700,
+    entryY: 360,
+    entryRotate: -20,
+    exitX: 740,
+    exitY: -360,
+    exitRotate: 18
+  },
+  {
+    id: 7,
+    src: "/7.webp",
+    alt: "Open Graph result sample 7",
+    sizeClass: "w-[min(88vw,740px)]",
+    entryX: 730,
+    entryY: 330,
+    entryRotate: 22,
+    exitX: -760,
+    exitY: -260,
+    exitRotate: -16
+  },
+  {
+    id: 8,
+    src: "/8.webp",
+    alt: "Open Graph result sample 8",
+    sizeClass: "w-[min(88vw,700px)]",
+    entryX: 0,
+    entryY: -720,
+    entryRotate: -14,
+    exitX: 780,
+    exitY: 120,
+    exitRotate: 11
+  },
+  {
+    id: 9,
+    src: "/9.webp",
+    alt: "Open Graph result sample 9",
+    sizeClass: "w-[min(88vw,730px)]",
+    entryX: 300,
+    entryY: 720,
+    entryRotate: 12,
+    exitX: -680,
+    exitY: -440,
+    exitRotate: -14
+  }
+];
+
+type ResultMeteorCardProps = {
+  shot: ResultShot;
+  progress: MotionValue<number>;
+  index: number;
+  total: number;
+};
+
+function ResultMeteorCard({ shot, progress, index, total }: ResultMeteorCardProps) {
+  const segment = 1 / total;
+  const start = index * segment;
+  const end = (index + 1) * segment;
+  const phase = useTransform(progress, [start, end], [0, 1], { clamp: true });
+
+  const x = useTransform(phase, [0, 0.32, 0.78, 0.9, 1], [shot.entryX, 0, 0, shot.exitX * 0.32, shot.exitX]);
+  const y = useTransform(phase, [0, 0.32, 0.78, 0.9, 1], [shot.entryY, 0, 0, shot.exitY * 0.32, shot.exitY]);
+  const rotate = useTransform(
+    phase,
+    [0, 0.32, 0.78, 0.9, 1],
+    [shot.entryRotate, 0, 0, shot.exitRotate * 0.35, shot.exitRotate]
+  );
+  const opacity = useTransform(phase, [0, 0.2, 0.8, 0.92, 1], [0, 1, 1, 0.9, 0]);
+  const scale = useTransform(phase, [0, 0.28, 0.8, 1], [0.76, 1, 1, 0.86]);
+  const blurAmount = useTransform(phase, [0, 0.28, 0.84, 1], [10, 0, 0, 8]);
+  const blurFilter = useTransform(blurAmount, (value) => `blur(${value.toFixed(1)}px)`);
+
+  const entryTrailAngle = Math.atan2(-shot.entryY, -shot.entryX) * (180 / Math.PI);
+  const exitTrailAngle = Math.atan2(-shot.exitY, -shot.exitX) * (180 / Math.PI);
+  const trailOpacity = useTransform(phase, [0, 0.2, 0.34, 0.66, 0.82, 1], [0, 0.95, 0.1, 0.1, 0.7, 0]);
+  const trailAngle = useTransform(phase, (value) => (value < 0.68 ? entryTrailAngle : exitTrailAngle));
+
+  return (
+    <motion.figure
+      className={`absolute left-1/2 top-[47%] -translate-x-1/2 -translate-y-1/2 ${shot.sizeClass}`}
+      style={{ x, y, rotate, opacity, scale, filter: blurFilter, zIndex: total + index + 2 }}
+    >
+      <motion.div
+        className="pointer-events-none absolute left-1/2 top-1/2 h-px w-44 md:w-72 -translate-x-1/2 -translate-y-1/2 origin-left bg-gradient-to-r from-cyan-100/90 via-cyan-200/40 to-transparent"
+        style={{ opacity: trailOpacity, rotate: trailAngle }}
+      />
+      <div className="relative overflow-hidden rounded-[1.15rem] border border-zinc-700/80 bg-zinc-950/90 backdrop-blur-sm">
+        <Image src={shot.src} alt={shot.alt} width={560} height={294} className="h-auto w-full object-cover" />
+      </div>
+    </motion.figure>
+  );
+}
 
 export default function LandingPage() {
   const [activeFAQ, setActiveFAQ] = useState<number | null>(null);
   const marqueeTemplates = [...TEMPLATE_LIBRARY, ...TEMPLATE_LIBRARY];
-
-  // Interactive Editor State
-  const [editorData, setEditorData] = useState({
-    title: "Create beautiful OG images for free.",
-    subtitle: "The fastest way to generate open graph images directly in your browser.",
-    author: "ogimg.in",
+  const resultsSectionRef = useRef<HTMLElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: resultsSectionRef,
+    offset: ["start start", "end end"]
   });
+  const stageY = useTransform(scrollYProgress, [0, 1], [8, -8]);
 
   const faqs = [
     {
@@ -112,85 +281,38 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Dynamic Feature: Interactive Template Editor Preview */}
-      <section className="py-24 px-6 bg-[#0a0a0a]" id="editor-preview">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className={`text-3xl md:text-5xl font-bold mb-4 ${GeistPixelSquare.className} tracking-[-0.05em]`}>
-              Edit in Real-time
-            </h2>
-            <p className="text-zinc-400 text-lg max-w-xl mx-auto tracking-[-0.03em]">
-              Select a template, tweak the copy, and see your new open graph image instantly.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-12 gap-8 items-start">
-            {/* Editor Input Controls */}
-            <div className="md:col-span-4 p-6 bg-zinc-950 border border-zinc-800 rounded-xl space-y-6 shadow-sm">
-              <div>
-                <label className="text-xs font-semibold uppercase text-muted-foreground mb-2 block tracking-[-0.02em]">Template Theme</label>
-                <div className="flex gap-2">
-                  <div className="h-8 w-8 rounded-full border border-border bg-zinc-900 cursor-pointer ring-2 ring-primary ring-offset-2 ring-offset-background" />
-                  <div className="h-8 w-8 rounded-full border border-border bg-white cursor-pointer" />
-                  <div className="h-8 w-8 rounded-full border border-border bg-blue-900 cursor-pointer" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold uppercase text-muted-foreground mb-2 block tracking-[-0.02em]">Title</label>
-                <div className="relative">
-                  <TextAa className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                  <input
-                    type="text"
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded h-10 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-700"
-                    value={editorData.title}
-                    onChange={(e) => setEditorData({ ...editorData, title: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold uppercase text-muted-foreground mb-2 block tracking-[-0.02em]">Description</label>
-                <textarea
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded p-3 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-700 resize-none"
-                  rows={3}
-                  value={editorData.subtitle}
-                  onChange={(e) => setEditorData({ ...editorData, subtitle: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold uppercase text-muted-foreground mb-2 block tracking-[-0.02em]">Author / Badge</label>
-                <input
-                  type="text"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded h-10 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-700"
-                  value={editorData.author}
-                  onChange={(e) => setEditorData({ ...editorData, author: e.target.value })}
-                />
-              </div>
+      {/* Scroll Results Sequence */}
+      <section
+        ref={resultsSectionRef}
+        className="relative bg-[#0a0a0a]"
+        id="results-showcase"
+        style={{ height: `${RESULT_SHOTS.length * 130}vh` }}
+      >
+        <div className="sticky top-0 h-screen overflow-hidden">
+          <div className="relative z-10 mx-auto flex h-full max-w-6xl flex-col px-6 pt-20 pb-10">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="mb-3 inline-flex rounded-full border border-zinc-700/80 bg-zinc-900/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-200">
+                Product Results
+              </p>
+              <h2 className={`text-3xl md:text-5xl font-bold tracking-[-0.05em] ${GeistPixelSquare.className}`}>
+                Scroll through our best outputs
+              </h2>
             </div>
 
-            {/* Preview Output */}
-            <div className="md:col-span-8">
-              <div className="w-full aspect-1200/630 bg-[#1a1a1a] rounded-xl border border-border shadow-2xl relative overflow-hidden flex flex-col justify-center p-12 lg:p-16">
-                <div className="absolute inset-0 bg-linear-to-br from-zinc-800/20 to-zinc-900/80 pointer-events-none" />
-                <div className="relative z-10">
-                  <span className="inline-block px-4 py-1.5 border border-zinc-700 rounded-full text-zinc-300 text-sm font-medium mb-8 bg-zinc-800/50 backdrop-blur-sm">
-                    {editorData.author || "Your Name"}
-                  </span>
-                  <h3 className={`text-5xl lg:text-7xl font-bold text-white mb-6 leading-tight ${GeistPixelSquare.className} tracking-[-0.04em]`}>
-                    {editorData.title || "Your Title Here"}
-                  </h3>
-                  <p className="text-xl lg:text-2xl text-zinc-400 max-w-2xl font-medium tracking-tight">
-                    {editorData.subtitle || "A short description goes here to explain what the page is about."}
-                  </p>
-                </div>
-                {/* Decorative Elements inside OG Image */}
-                <div className="absolute right-0 bottom-0 p-12 opacity-50 blur-sm pointer-events-none">
-                  <Globe size={160} weight="thin" className="text-zinc-600" />
-                </div>
-              </div>
-            </div>
+            <motion.div
+              className="relative mt-4 min-h-[320px] flex-1 md:mt-10 md:min-h-[460px]"
+              style={{ y: stageY }}
+            >
+              {RESULT_SHOTS.map((shot, index) => (
+                <ResultMeteorCard
+                  key={shot.id}
+                  shot={shot}
+                  progress={scrollYProgress}
+                  index={index}
+                  total={RESULT_SHOTS.length}
+                />
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>
@@ -300,7 +422,7 @@ export default function LandingPage() {
               <p className="text-zinc-400 tracking-tight text-sm">Add your copy, change the badge, upload your company logo seamlessly.</p>
             </div>
             <div className="flex flex-col items-center pt-8 md:pt-0">
-              <div className="w-16 h-16 rounded-2xl bg-zinc-100 text-black flex items-center justify-center mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-6">
                 <Download size={28} weight="bold" />
               </div>
               <h3 className="text-xl font-bold mb-2">3. Download</h3>
