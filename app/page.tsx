@@ -10,120 +10,19 @@ import {
   CheckCircle,
   CaretDown,
   GithubLogo,
-  TwitterLogo
+  XLogo
 } from "@phosphor-icons/react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { GeistPixelSquare } from "geist/font/pixel";
 import { motion, AnimatePresence } from "framer-motion";
-import Editor from "./components/Editor";
-import { DEFAULT_TEMPLATE_ID, TEMPLATE_LIBRARY, TemplateId, getTemplateById } from "./components/templates/templateRegistry";
-import MinimalistTech from "./components/templates/MinimalistTech";
-import AppShowcase from "./components/templates/AppShowcase";
-import CenteredContainer from "./components/templates/CenteredContainer";
-import BrandPitch from "./components/templates/BrandPitch";
-import EditorialPixel from "./components/templates/EditorialPixel";
-import SaasLaunch from "./components/templates/SaasLaunch";
-import BlogPost from "./components/templates/BlogPost";
-import PodcastCover from "./components/templates/PodcastCover";
-import Changelog from "./components/templates/Changelog";
-import type { TemplateProps } from "./components/templates/templateShared";
-
-function TemplateGalleryPreview({
-  templateId,
-}: {
-  templateId: TemplateId;
-}) {
-  const previewContainerRef = useRef<HTMLDivElement>(null);
-  const [previewScale, setPreviewScale] = useState(1);
-  const template = getTemplateById(templateId);
-  const defaults = template.defaults;
-
-  useEffect(() => {
-    const container = previewContainerRef.current;
-    if (!container) return;
-
-    const calculateScale = () => {
-      const widthScale = container.clientWidth / 1200;
-      const heightScale = container.clientHeight / 630;
-      setPreviewScale(Math.min(widthScale, heightScale, 1));
-    };
-
-    calculateScale();
-
-    const observer = new ResizeObserver(calculateScale);
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
-
-  const templateProps: TemplateProps = {
-    title: defaults.title,
-    textColor: defaults.textColor,
-    logoImage: "/ogimg.png",
-    image: template.supportsImage ? defaults.image || undefined : undefined,
-    tag: defaults.tag,
-    logo: defaults.logo,
-    detailOne: defaults.detailOne,
-    detailTwo: defaults.detailTwo,
-    detailThree: defaults.detailThree,
-    fontStyle: "normal",
-    fontWeight: "bold",
-    textDecoration: "none",
-    fontFamily: templateId === "changelog" ? "var(--font-geist-mono)" : "var(--font-geist-sans)",
-    backgroundMode: defaults.backgroundMode,
-    gradientStart: defaults.gradientStart,
-    gradientEnd: defaults.gradientEnd,
-    gradientAngle: defaults.gradientAngle,
-    gridOverlay: defaults.gridOverlay,
-    gridColor: defaults.gridColor,
-    gridOpacity: defaults.gridOpacity,
-    gridBlur: defaults.gridBlur,
-  };
-
-  const renderTemplate = () => {
-    switch (templateId) {
-      case "app-showcase":
-        return <AppShowcase {...templateProps} />;
-      case "centered-container":
-        return <CenteredContainer {...templateProps} />;
-      case "brand-pitch":
-        return <BrandPitch {...templateProps} />;
-      case "editorial-pixel":
-        return <EditorialPixel {...templateProps} />;
-      case "saas-launch":
-        return <SaasLaunch {...templateProps} />;
-      case "blog-post":
-        return <BlogPost {...templateProps} />;
-      case "podcast-cover":
-        return <PodcastCover {...templateProps} />;
-      case "changelog":
-        return <Changelog {...templateProps} />;
-      case "minimalist-tech":
-      default:
-        return <MinimalistTech {...templateProps} />;
-    }
-  };
-
-  return (
-    <div ref={previewContainerRef} className="aspect-1200/630 relative overflow-hidden flex items-center justify-center">
-      <div
-        className="shrink-0"
-        style={{
-          width: "1200px",
-          height: "630px",
-          transform: `scale(${previewScale})`,
-          transformOrigin: "center center",
-        }}
-      >
-        {renderTemplate()}
-      </div>
-    </div>
-  );
-}
+import { TEMPLATE_LIBRARY } from "./components/templates/templateRegistry";
+import TemplateGalleryPreview from "./components/TemplateGalleryPreview";
 
 export default function LandingPage() {
   const [activeFAQ, setActiveFAQ] = useState<number | null>(null);
-  const [activeTemplate, setActiveTemplate] = useState<TemplateId | null>(null);
+  const marqueeTemplates = [...TEMPLATE_LIBRARY, ...TEMPLATE_LIBRARY];
 
   // Interactive Editor State
   const [editorData, setEditorData] = useState({
@@ -159,12 +58,8 @@ export default function LandingPage() {
     }
   ];
 
-  if (activeTemplate) {
-    return <Editor key={activeTemplate} onBack={() => setActiveTemplate(null)} templateId={activeTemplate} />;
-  }
-
   return (
-    <div className="min-h-screen font-sans selection:bg-primary selection:text-primary-foreground tracking-[-0.04em]">
+    <div className="min-h-screen bg-[#0a0a0a] text-zinc-100 font-sans selection:bg-zinc-200 selection:text-zinc-900 tracking-[-0.04em]">
       <nav className="absolute top-0 inset-x-0 z-50 bg-transparent">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 w-1/3">
@@ -172,66 +67,66 @@ export default function LandingPage() {
             <span className={`text-xl ${GeistPixelSquare.className} tracking-[-0.05em]`}>ogimg.in</span>
           </div>
           <div className="flex gap-6 items-center justify-center w-1/3">
-            <a href="#templates" className="text-sm font-medium hover:text-foreground hover:underline underline-offset-4 transition-all">Templates</a>
+            <Link href="/template-gallery" className="text-sm font-medium hover:text-foreground hover:underline underline-offset-4 transition-all">Templates</Link>
             <a href="#how-it-works" className="text-sm font-medium hover:text-foreground hover:underline underline-offset-4 transition-all">How it works</a>
           </div>
           <div className="flex items-center justify-end w-1/3">
-            <button
-              onClick={() => setActiveTemplate(DEFAULT_TEMPLATE_ID)}
+            <Link
+              href="/template-gallery"
               className="bg-foreground text-background px-4 py-2 rounded text-sm font-semibold hover:bg-foreground/90 transition-colors"
             >
               Get Started
-            </button>
+            </Link>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6 overflow-hidden relative">
+      <section className="pt-32 pb-20 px-6 overflow-hidden relative bg-[#0a0a0a]">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 blur-[120px] rounded-full -z-10 pointer-events-none" />
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-card/50 backdrop-blur text-sm font-medium mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/60 backdrop-blur text-sm font-medium mb-8">
             <Sparkle size={16} className="text-muted-foreground" />
-            <span>v1.0 is now live</span>
+            <span>Free and Open Source</span>
           </div>
           <h1 className={`text-5xl md:text-7xl font-bold leading-tight mb-6 ${GeistPixelSquare.className} tracking-[-0.05em]`}>
             Stop worrying about <br />
-            <span className="text-background bg-foreground px-2">Open Graph</span> images.
+            <span className="text-black bg-zinc-100 px-2">Open Graph</span> images.
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto tracking-[-0.03em]">
             Generate perfectly sized, beautiful OG images for your site from pre-existing elegant templates.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={() => setActiveTemplate(DEFAULT_TEMPLATE_ID)}
-              className="h-12 px-8 bg-foreground text-background font-semibold rounded hover:bg-foreground/90 transition-all flex items-center gap-2"
+            <Link
+              href="/template-gallery"
+              className="h-12 px-8 bg-zinc-100 text-black font-semibold rounded hover:bg-zinc-200 transition-all flex items-center gap-2"
             >
               Start Creating
               <Export weight="bold" />
-            </button>
-            <a href="#templates" className="h-12 px-8 border border-border bg-card/50 hover:bg-accent font-semibold rounded transition-all flex items-center gap-2">
+            </Link>
+            <Link href="/template-gallery" className="h-12 px-8 border border-zinc-800 bg-zinc-950 hover:bg-zinc-900 font-semibold rounded transition-all flex items-center gap-2">
               <SquaresFour weight="bold" />
               View Templates
-            </a>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Dynamic Feature: Interactive Template Editor Preview */}
-      <section className="py-24 px-6 bg-card" id="editor-preview">
+      <section className="py-24 px-6 bg-[#0a0a0a]" id="editor-preview">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className={`text-3xl md:text-5xl font-bold mb-4 ${GeistPixelSquare.className} tracking-[-0.05em]`}>
               Edit in Real-time
             </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto tracking-[-0.03em]">
+            <p className="text-zinc-400 text-lg max-w-xl mx-auto tracking-[-0.03em]">
               Select a template, tweak the copy, and see your new open graph image instantly.
             </p>
           </div>
 
           <div className="grid md:grid-cols-12 gap-8 items-start">
             {/* Editor Input Controls */}
-            <div className="md:col-span-4 p-6 bg-background border border-border rounded-xl space-y-6 shadow-sm">
+            <div className="md:col-span-4 p-6 bg-zinc-950 border border-zinc-800 rounded-xl space-y-6 shadow-sm">
               <div>
                 <label className="text-xs font-semibold uppercase text-muted-foreground mb-2 block tracking-[-0.02em]">Template Theme</label>
                 <div className="flex gap-2">
@@ -247,7 +142,7 @@ export default function LandingPage() {
                   <TextAa className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                   <input
                     type="text"
-                    className="w-full bg-accent/50 border border-border rounded h-10 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded h-10 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-700"
                     value={editorData.title}
                     onChange={(e) => setEditorData({ ...editorData, title: e.target.value })}
                   />
@@ -257,7 +152,7 @@ export default function LandingPage() {
               <div>
                 <label className="text-xs font-semibold uppercase text-muted-foreground mb-2 block tracking-[-0.02em]">Description</label>
                 <textarea
-                  className="w-full bg-accent/50 border border-border rounded p-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded p-3 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-700 resize-none"
                   rows={3}
                   value={editorData.subtitle}
                   onChange={(e) => setEditorData({ ...editorData, subtitle: e.target.value })}
@@ -268,7 +163,7 @@ export default function LandingPage() {
                 <label className="text-xs font-semibold uppercase text-muted-foreground mb-2 block tracking-[-0.02em]">Author / Badge</label>
                 <input
                   type="text"
-                  className="w-full bg-accent/50 border border-border rounded h-10 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded h-10 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-700"
                   value={editorData.author}
                   onChange={(e) => setEditorData({ ...editorData, author: e.target.value })}
                 />
@@ -301,139 +196,131 @@ export default function LandingPage() {
       </section>
 
       {/* Dynamic Feature: Gallery of Pre-existing Templates */}
-      <section className="py-24 px-6 relative" id="templates">
+      <section className="py-24 px-0 relative bg-[#0a0a0a]" id="templates">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12">
             <div>
               <h2 className={`text-3xl md:text-5xl font-bold mb-4 ${GeistPixelSquare.className} tracking-[-0.05em]`}>
                 Template Gallery
               </h2>
-              <p className="text-muted-foreground text-lg tracking-[-0.03em] max-w-lg">
-                Choose from highly optimized, aesthetically pleasing templates designed for social media feeds.
+              <p className="text-zinc-400 text-lg tracking-[-0.03em] max-w-lg">
+                Pick a template and start editing.
               </p>
             </div>
-            <button className="mt-4 md:mt-0 text-sm font-semibold flex items-center gap-2 hover:text-muted-foreground transition-colors group">
+            <Link href="/template-gallery" className="mt-4 md:mt-0 text-sm font-semibold flex items-center gap-2 hover:text-muted-foreground transition-colors group">
               View all templates <CaretDown className="group-hover:-rotate-90 transition-transform" />
-            </button>
+            </Link>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {TEMPLATE_LIBRARY.map((tmpl) => (
-              <div
-                key={tmpl.id}
-                className="relative rounded-xl border border-border bg-card overflow-hidden hover:border-ring transition-colors cursor-pointer"
-                onClick={() => setActiveTemplate(tmpl.id)}
-              >
-                <TemplateGalleryPreview
-                  templateId={tmpl.id}
-                />
-              </div>
-            ))}
+          <div className="relative template-marquee-wrapper">
+            <div className="template-marquee-track flex w-max gap-5 py-2">
+              {marqueeTemplates.map((template, index) => (
+                <Link
+                  key={`${template.id}-${index}`}
+                  href={`/editor/${template.id}`}
+                  className="group w-[350px] shrink-0 rounded-xl border border-zinc-800 bg-zinc-950 overflow-hidden hover:border-zinc-600 transition-colors"
+                >
+                  <TemplateGalleryPreview templateId={template.id} />
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Dynamic Feature: Export formats showcase */}
-      <section className="py-24 px-6 bg-secondary/50">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">
-          <div className="flex-1">
-            <h2 className={`text-3xl md:text-5xl font-bold mb-6 ${GeistPixelSquare.className} tracking-[-0.05em]`}>
-              Export flawlessly.
+      {/* SEO Feature Section */}
+      <section className="py-24 px-6 bg-[#0a0a0a] border-y border-zinc-900/80">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className={`text-3xl md:text-5xl font-bold mb-4 ${GeistPixelSquare.className} tracking-[-0.05em]`}>
+              SEO-ready social previews
             </h2>
-            <p className="text-muted-foreground text-lg mb-8 tracking-[-0.03em]">
-              Whether you need transparent PNG overlays or heavily optimized JPGs for faster loading, we support high quality exports up to 2x resolution.
+            <p className="text-zinc-400 text-lg max-w-3xl mx-auto tracking-[-0.03em]">
+              Build Open Graph images that improve click-through rate on X, LinkedIn, Discord, and search result shares. ogimg.in helps you ship consistent, crawl-friendly metadata visuals in minutes.
             </p>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-6 border border-border rounded-xl bg-background flex flex-col items-center justify-center text-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
-                  <span className="font-bold text-sm">PNG</span>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-sm">Transparent & Lossless</h4>
-                  <p className="text-xs text-muted-foreground mt-1 tracking-tight">Ideal for overlapping elements</p>
-                </div>
-              </div>
-              <div className="p-6 border border-border rounded-xl bg-background flex flex-col items-center justify-center text-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
-                  <span className="font-bold text-sm">JPEG</span>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-sm">Compressed</h4>
-                  <p className="text-xs text-muted-foreground mt-1 tracking-tight">Best for page speed & SEO</p>
-                </div>
-              </div>
-            </div>
-
-            <button className="mt-8 px-6 py-3 bg-background border border-border shadow-sm rounded flex items-center gap-2 text-sm font-semibold hover:bg-accent transition-colors">
-              <Download weight="bold" /> Try Exporting a Sample
-            </button>
           </div>
-          <div className="flex-1 w-full relative">
-            <div className="aspect-square max-w-md mx-auto relative">
-              <div className="absolute inset-0 bg-primary/10 rounded-full blur-3xl" />
-              <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop" alt="Abstract rendering" className="w-full h-full object-cover rounded-2xl grayscale border border-border relative z-10 opacity-80" />
-              <div className="absolute -bottom-6 -left-6 bg-card border border-border shadow-xl p-4 rounded-xl z-20 flex gap-4 pr-12">
-                <CheckCircle size={24} weight="fill" className="text-foreground" />
-                <div>
-                  <p className="text-sm font-bold tracking-tight">Export Complete</p>
-                  <p className="text-xs text-muted-foreground">og-image-final.png (142kb)</p>
-                </div>
+
+          <div className="grid md:grid-cols-3 gap-5">
+            <article className="p-5 rounded-xl border border-zinc-800 bg-zinc-950">
+              <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4">
+                <CheckCircle size={18} weight="fill" className="text-zinc-200" />
               </div>
-            </div>
+              <h3 className="text-base font-semibold mb-2">Consistent Open Graph metadata</h3>
+              <p className="text-sm text-zinc-400">
+                Match your brand title, description, and preview image layout across every URL to reduce visual mismatch in social feeds.
+              </p>
+            </article>
+            <article className="p-5 rounded-xl border border-zinc-800 bg-zinc-950">
+              <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4">
+                <Globe size={18} className="text-zinc-200" />
+              </div>
+              <h3 className="text-base font-semibold mb-2">Faster publishing workflow</h3>
+              <p className="text-sm text-zinc-400">
+                Generate PNG, JPEG, or WebP in-browser, then plug into `og:image` and `twitter:image` tags without waiting for design handoffs.
+              </p>
+            </article>
+            <article className="p-5 rounded-xl border border-zinc-800 bg-zinc-950">
+              <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4">
+                <Sparkle size={18} className="text-zinc-200" />
+              </div>
+              <h3 className="text-base font-semibold mb-2">Higher social click potential</h3>
+              <p className="text-sm text-zinc-400">
+                Better headline hierarchy, contrast, and template consistency improve preview quality and can increase social CTR for launches and blog posts.
+              </p>
+            </article>
           </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section className="py-24 px-6" id="how-it-works">
+      <section className="py-24 px-6 bg-[#0a0a0a]" id="how-it-works">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className={`text-3xl md:text-5xl font-bold mb-4 ${GeistPixelSquare.className} tracking-[-0.05em]`}>
               How it works
             </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto tracking-[-0.03em]">
+            <p className="text-zinc-400 text-lg max-w-xl mx-auto tracking-[-0.03em]">
               Just three simple steps to beautiful metadata.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-2xl bg-accent border border-border flex items-center justify-center mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-6">
                 <SquaresFour size={28} className="text-foreground" />
               </div>
               <h3 className="text-xl font-bold mb-2">1. Pick a template</h3>
-              <p className="text-muted-foreground tracking-tight text-sm">Browse our carefully curated gallery of designs tailored for high CTR.</p>
+              <p className="text-zinc-400 tracking-tight text-sm">Browse our carefully curated gallery of designs tailored for high CTR.</p>
             </div>
             <div className="flex flex-col items-center pt-8 md:pt-0">
-              <div className="w-16 h-16 rounded-2xl bg-accent border border-border flex items-center justify-center mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-6">
                 <TextAa size={28} className="text-foreground" />
               </div>
               <h3 className="text-xl font-bold mb-2">2. Adjust the content</h3>
-              <p className="text-muted-foreground tracking-tight text-sm">Add your copy, change the badge, upload your company logo seamlessly.</p>
+              <p className="text-zinc-400 tracking-tight text-sm">Add your copy, change the badge, upload your company logo seamlessly.</p>
             </div>
             <div className="flex flex-col items-center pt-8 md:pt-0">
-              <div className="w-16 h-16 rounded-2xl bg-foreground text-background flex items-center justify-center mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-zinc-100 text-black flex items-center justify-center mb-6">
                 <Download size={28} weight="bold" />
               </div>
               <h3 className="text-xl font-bold mb-2">3. Download</h3>
-              <p className="text-muted-foreground tracking-tight text-sm">Grab your PNG or JPG file instantly. Attach it to your head tags and you run!</p>
+              <p className="text-zinc-400 tracking-tight text-sm">Grab your PNG or JPG file instantly. Attach it to your head tags and you run!</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="py-24 px-6 bg-card">
+      <section className="py-24 px-6 bg-[#0a0a0a]">
         <div className="max-w-3xl mx-auto">
           <h2 className={`text-3xl md:text-5xl font-bold mb-12 text-center ${GeistPixelSquare.className} tracking-[-0.05em]`}>
             Frequently Asked Questions
           </h2>
           <div className="space-y-4">
             {faqs.map((faq, index) => (
-              <div key={index} className="border border-border rounded-lg bg-background overflow-hidden">
+              <div key={index} className="border border-zinc-800 rounded-lg bg-zinc-950 overflow-hidden">
                 <button
-                  className="w-full text-left px-6 py-4 flex items-center justify-between font-medium tracking-tight hover:bg-accent/50 transition-colors"
+                  className="w-full text-left px-6 py-4 flex items-center justify-between font-medium tracking-tight hover:bg-zinc-900 transition-colors"
                   onClick={() => setActiveFAQ(activeFAQ === index ? null : index)}
                 >
                   {faq.q}
@@ -447,7 +334,7 @@ export default function LandingPage() {
                       exit={{ height: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-6 pb-4 pt-2 text-muted-foreground text-sm leading-relaxed">
+                      <div className="px-6 pb-4 pt-2 text-zinc-400 text-sm leading-relaxed">
                         {faq.a}
                       </div>
                     </motion.div>
@@ -459,17 +346,39 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-background pt-10 pb-10 px-6 border-t border-border mt-24">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <Image src="/ogimg.png" alt="ogimg logo" width={24} height={24} className="rounded-sm bg-white p-0.5" />
-            <span className={`font-bold ${GeistPixelSquare.className}`}>ogimg.in</span>
+      {/* CTA */}
+      <section className="px-6 pb-8 bg-[#0a0a0a]">
+        <div className="max-w-4xl mx-auto">
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <p className="text-lg font-semibold">Ready to publish your next OG image?</p>
+              <p className="text-sm text-zinc-400 mt-1">Open the gallery, pick a template, and export in under 60 seconds.</p>
+            </div>
+            <Link
+              href="/template-gallery"
+              className="h-10 px-5 rounded-lg bg-zinc-100 text-black text-sm font-semibold hover:bg-zinc-200 transition-colors inline-flex items-center gap-2"
+            >
+              Open Template Gallery
+              <Export size={14} weight="bold" />
+            </Link>
           </div>
-          <p className="text-sm text-muted-foreground">© 2026 ogimg.in. All rights reserved.</p>
-          <div className="flex gap-4">
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors"><TwitterLogo size={20} /></a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors"><GithubLogo size={20} /></a>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-[#0a0a0a] pt-10 pb-10 px-6 border-t border-zinc-900">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <p className="text-sm text-zinc-500">© 2026 ogimg.in. All rights reserved.</p>
+          <div className="flex items-center gap-5">
+            <Link href="/changelog" className="text-sm text-zinc-400 hover:text-zinc-100 transition-colors">
+              Changelog
+            </Link>
+            <a href="#" aria-label="X" className="text-zinc-400 hover:text-zinc-100 transition-colors">
+              <XLogo size={20} />
+            </a>
+            <a href="#" aria-label="GitHub" className="text-zinc-400 hover:text-zinc-100 transition-colors">
+              <GithubLogo size={20} />
+            </a>
           </div>
         </div>
       </footer>

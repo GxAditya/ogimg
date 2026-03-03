@@ -80,7 +80,7 @@ export default function MinimalistTech({
                     )}
 
                     {tagLabel && (
-                        <div className="inline-flex items-center px-4 py-1.5 border border-black/30 rounded-full text-[14px] font-medium tracking-[-0.01em] bg-black/8 backdrop-blur-sm" style={{ color: mutedTextColor }}>
+                        <div className="inline-flex w-max max-w-full items-center whitespace-nowrap px-4 py-1.5 border border-black/30 rounded-full text-[14px] font-medium tracking-[-0.01em] bg-black/8 backdrop-blur-sm" style={{ color: mutedTextColor }}>
                             {tagLabel}
                         </div>
                     )}

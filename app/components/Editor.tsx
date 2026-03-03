@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, ChangeEvent } from "react";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import { CaretLeft, DownloadSimple, CaretDown } from "@phosphor-icons/react";
+import { useRouter } from "next/navigation";
 import MinimalistTech from "./templates/MinimalistTech";
 import AppShowcase from "./templates/AppShowcase";
 import CenteredContainer from "./templates/CenteredContainer";
@@ -14,9 +15,17 @@ import BlogPost from "./templates/BlogPost";
 import PodcastCover from "./templates/PodcastCover";
 import Changelog from "./templates/Changelog";
 import { getTemplateById, TemplateId } from "./templates/templateRegistry";
+import {
+    getTemplateDefaultFontId,
+    getTemplateFontFaceName,
+    getTemplateFontFamily,
+    TEMPLATE_FONT_OPTIONS,
+    TemplateFontId,
+} from "./templates/fontCatalog";
 import { BackgroundMode, GridOverlay, TemplateProps } from "./templates/templateShared";
 
 type ExportFormat = "png" | "jpeg" | "webp";
+type EditorPanel = "save-image" | "format-tips";
 
 const COLOR_PRESETS = [
     ["#020617", "#111827"],
@@ -74,7 +83,18 @@ const GRADIENT_DIRECTIONS = [
     { label: "↖", angle: 315 },
 ] as const;
 
-export default function Editor({ onBack, templateId }: { onBack: () => void; templateId: TemplateId }) {
+const FONT_STYLESHEET_URL = "/fonts/fonts.css";
+
+export default function Editor({
+    onBack,
+    templateId,
+    backHref = "/template-gallery",
+}: {
+    onBack?: () => void;
+    templateId: TemplateId;
+    backHref?: string;
+}) {
+    const router = useRouter();
     const selectedTemplate = getTemplateById(templateId);
     const defaults = selectedTemplate.defaults;
     const templateSupportsImage = selectedTemplate.supportsImage;
@@ -93,6 +113,7 @@ export default function Editor({ onBack, templateId }: { onBack: () => void; tem
 
     const [exportFormat, setExportFormat] = useState<ExportFormat>("png");
     const [isExporting, setIsExporting] = useState(false);
+    const [activePanel, setActivePanel] = useState<EditorPanel>("save-image");
 
     const [bgMode, setBgMode] = useState<BackgroundMode>(defaults.backgroundMode);
     const [gradientStart, setGradientStart] = useState(defaults.gradientStart);
@@ -102,6 +123,7 @@ export default function Editor({ onBack, templateId }: { onBack: () => void; tem
     const [gridColor, setGridColor] = useState(defaults.gridColor);
     const [gridOpacity, setGridOpacity] = useState(defaults.gridOpacity);
     const [gridBlur, setGridBlur] = useState(defaults.gridBlur);
+    const [fontId, setFontId] = useState<TemplateFontId>(getTemplateDefaultFontId(templateId));
     const [previewScale, setPreviewScale] = useState(1);
     const tagLabel = templateId === "changelog"
         ? "Footer CTA"
@@ -216,6 +238,25 @@ export default function Editor({ onBack, templateId }: { onBack: () => void; tem
         );
     };
 
+    const waitForTemplateFontsToLoad = async () => {
+        const targetFace = getTemplateFontFaceName(fontId);
+        const exportWeights = ["400", "600", "700"] as const;
+
+        await Promise.all(
+            exportWeights.map((weight) => document.fonts.load(`${weight} 16px "${targetFace}"`))
+        );
+        await document.fonts.ready;
+    };
+
+    const getFontStylesheetText = async () => {
+        const response = await fetch(FONT_STYLESHEET_URL, { cache: "force-cache" });
+        if (!response.ok) {
+            throw new Error(`Failed to load font stylesheet (${response.status}).`);
+        }
+
+        return response.text();
+    };
+
     const handleExport = async () => {
         const sourceNode = document.getElementById("og-template-node");
         if (!sourceNode) return;
@@ -247,8 +288,9 @@ export default function Editor({ onBack, templateId }: { onBack: () => void; tem
         document.body.appendChild(exportHost);
 
         try {
-            await document.fonts.ready;
+            await waitForTemplateFontsToLoad();
             await waitForImagesToLoad(exportNode);
+            const fontStylesheetText = await getFontStylesheetText();
 
             const sharedOptions = {
                 scale: 2,
@@ -259,19 +301,38 @@ export default function Editor({ onBack, templateId }: { onBack: () => void; tem
                 height: 630,
                 imageTimeout: 15000,
                 backgroundColor: exportFormat === "jpeg" ? "#ffffff" : null,
+                onclone: async (clonedDocument: Document, clonedReferenceElement: HTMLElement) => {
+                    const fontStyleTag = clonedDocument.createElement("style");
+                    fontStyleTag.setAttribute("data-ogimg-fonts", "true");
+                    fontStyleTag.textContent = fontStylesheetText;
+                    clonedDocument.head.appendChild(fontStyleTag);
+
+                    const clonedTemplateNode = clonedReferenceElement as HTMLElement;
+                    clonedTemplateNode.style.fontFamily = getTemplateFontFamily(fontId);
+
+                    if (clonedDocument.fonts) {
+                        const targetFace = getTemplateFontFaceName(fontId);
+                        await Promise.all(
+                            ["400", "600", "700"].map((weight) =>
+                                clonedDocument.fonts.load(`${weight} 16px "${targetFace}"`)
+                            )
+                        );
+                        await clonedDocument.fonts.ready;
+                    }
+                },
             };
 
             let canvas: HTMLCanvasElement;
             try {
                 canvas = await html2canvas(exportNode, {
                     ...sharedOptions,
-                    foreignObjectRendering: false,
+                    foreignObjectRendering: true,
                 });
-            } catch (standardRenderError) {
-                console.warn("standard export failed, retrying with foreignObject renderer.", standardRenderError);
+            } catch (foreignObjectRenderError) {
+                console.warn("foreignObject export failed, retrying with standard renderer.", foreignObjectRenderError);
                 canvas = await html2canvas(exportNode, {
                     ...sharedOptions,
-                    foreignObjectRendering: true,
+                    foreignObjectRendering: false,
                 });
             }
 
@@ -311,7 +372,7 @@ export default function Editor({ onBack, templateId }: { onBack: () => void; tem
         fontStyle: "normal",
         fontWeight: "bold",
         textDecoration: "none",
-        fontFamily: templateId === "changelog" ? "var(--font-geist-mono)" : "var(--font-geist-sans)",
+        fontFamily: getTemplateFontFamily(fontId),
         backgroundMode: bgMode,
         gradientStart,
         gradientEnd,
@@ -346,12 +407,21 @@ export default function Editor({ onBack, templateId }: { onBack: () => void; tem
         }
     };
 
+    const handleBack = () => {
+        if (onBack) {
+            onBack();
+            return;
+        }
+
+        router.push(backHref);
+    };
+
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 font-geist-sans selection:bg-zinc-800">
+        <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 font-sans selection:bg-zinc-800">
             <main className="flex h-screen flex-col lg:flex-row gap-8 p-6 lg:p-10 max-w-[1500px] mx-auto w-full overflow-hidden">
                 <div className="w-full lg:w-[420px] shrink-0 flex flex-col gap-6 overflow-y-auto pr-2 pb-10 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-thumb]:rounded-full">
                     <button
-                        onClick={onBack}
+                        onClick={handleBack}
                         className="inline-flex w-fit items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-100 transition-colors"
                     >
                         <CaretLeft size={14} />
@@ -400,6 +470,26 @@ export default function Editor({ onBack, templateId }: { onBack: () => void; tem
                                         className="flex-1 bg-[#0a0a0a] border border-zinc-800/80 rounded-lg h-[42px] px-3 text-sm text-zinc-300 focus:outline-none focus:border-zinc-600 transition-colors"
                                     />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="text-[13px] font-medium text-zinc-300 mb-2 block min-h-[20px]">Font Style</label>
+                                <div className="relative">
+                                    <select
+                                        value={fontId}
+                                        onChange={(e) => setFontId(e.target.value as TemplateFontId)}
+                                        className="w-full bg-[#0a0a0a] border border-zinc-800/80 rounded-lg h-[42px] px-3 pr-8 text-sm text-zinc-300 focus:outline-none focus:border-zinc-600 transition-colors appearance-none"
+                                        style={{ fontFamily: getTemplateFontFamily(fontId) }}
+                                    >
+                                        {TEMPLATE_FONT_OPTIONS.map((fontOption) => (
+                                            <option key={fontOption.id} value={fontOption.id}>
+                                                {fontOption.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <CaretDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                                </div>
+                                <p className="text-[11px] text-zinc-500 mt-2">Self-hosted local fonts for export parity.</p>
                             </div>
 
                             <div>
@@ -733,43 +823,76 @@ export default function Editor({ onBack, templateId }: { onBack: () => void; tem
                     </div>
 
                     <div className="flex bg-[#111111] border border-zinc-800/60 rounded-2xl p-1 mb-3 shadow-sm">
-                        <button className="flex-1 py-2.5 text-[13px] font-medium bg-[#1a1a1a] rounded-xl border border-zinc-800 shadow-sm text-zinc-100">Save Image</button>
-                        <button className="flex-1 py-2.5 text-[13px] font-medium text-zinc-400 hover:text-zinc-200 transition-colors">Format Tips</button>
-                        <button className="flex-1 py-2.5 text-[13px] font-medium text-zinc-400 hover:text-zinc-200 transition-colors">API Request</button>
+                        <button
+                            type="button"
+                            onClick={() => setActivePanel("save-image")}
+                            className={`flex-1 py-2.5 text-[13px] font-medium rounded-xl border transition-colors ${activePanel === "save-image" ? "bg-[#1a1a1a] border-zinc-800 shadow-sm text-zinc-100" : "border-transparent text-zinc-400 hover:text-zinc-200"}`}
+                        >
+                            Save Image
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActivePanel("format-tips")}
+                            className={`flex-1 py-2.5 text-[13px] font-medium rounded-xl border transition-colors ${activePanel === "format-tips" ? "bg-[#1a1a1a] border-zinc-800 shadow-sm text-zinc-100" : "border-transparent text-zinc-400 hover:text-zinc-200"}`}
+                        >
+                            Format Tips
+                        </button>
                     </div>
 
-                    <div className="bg-[#111111] border border-zinc-800/60 rounded-2xl p-6 lg:p-8 flex flex-col justify-center shadow-sm">
-                        <h3 className="text-zinc-100 font-semibold text-[15px] mb-1">Save Image</h3>
-                        <p className="text-zinc-500 text-[13px] mb-8">Export the image as a PNG, JPEG or WebP.</p>
+                    {activePanel === "save-image" ? (
+                        <div className="bg-[#111111] border border-zinc-800/60 rounded-2xl p-6 lg:p-8 flex flex-col justify-center shadow-sm">
+                            <h3 className="text-zinc-100 font-semibold text-[15px] mb-1">Save Image</h3>
+                            <p className="text-zinc-500 text-[13px] mb-8">Export the image as a PNG, JPEG or WebP.</p>
 
-                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                            <p className="text-zinc-400 text-[13px] leading-relaxed max-w-[600px]">
-                                For optimal Open Graph (OG) image display on social media platforms like Twitter, Facebook, and LinkedIn, use PNG (recommended), JPEG, or WebP format.
-                            </p>
-                            <div className="flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
-                                <div className="relative">
-                                    <select
-                                        value={exportFormat}
-                                        onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
-                                        className="bg-[#0a0a0a] border border-zinc-800/80 rounded-lg h-10 pl-4 pr-8 text-[13px] font-medium text-zinc-300 outline-none hover:border-zinc-700 appearance-none cursor-pointer"
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                <p className="text-zinc-400 text-[13px] leading-relaxed max-w-[600px]">
+                                    For optimal Open Graph (OG) image display on social media platforms like Twitter, Facebook, and LinkedIn, use PNG (recommended), JPEG, or WebP format.
+                                </p>
+                                <div className="flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+                                    <div className="relative">
+                                        <select
+                                            value={exportFormat}
+                                            onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
+                                            className="bg-[#0a0a0a] border border-zinc-800/80 rounded-lg h-10 pl-4 pr-8 text-[13px] font-medium text-zinc-300 outline-none hover:border-zinc-700 appearance-none cursor-pointer"
+                                        >
+                                            <option value="png">PNG</option>
+                                            <option value="jpeg">JPEG</option>
+                                            <option value="webp">WebP</option>
+                                        </select>
+                                        <CaretDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                                    </div>
+                                    <button
+                                        onClick={handleExport}
+                                        disabled={isExporting}
+                                        className="h-10 px-5 bg-white text-black rounded-lg text-[13px] font-semibold flex items-center gap-2 hover:bg-zinc-200 transition-colors shrink-0 md:flex-none disabled:bg-zinc-800 disabled:text-zinc-500 w-full md:w-auto justify-center"
                                     >
-                                        <option value="png">PNG</option>
-                                        <option value="jpeg">JPEG</option>
-                                        <option value="webp">WebP</option>
-                                    </select>
-                                    <CaretDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                                        <DownloadSimple weight="bold" size={16} />
+                                        {isExporting ? "Saving..." : "Save Image"}
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={handleExport}
-                                    disabled={isExporting}
-                                    className="h-10 px-5 bg-white text-black rounded-lg text-[13px] font-semibold flex items-center gap-2 hover:bg-zinc-200 transition-colors shrink-0 md:flex-none disabled:bg-zinc-800 disabled:text-zinc-500 w-full md:w-auto justify-center"
-                                >
-                                    <DownloadSimple weight="bold" size={16} />
-                                    {isExporting ? "Saving..." : "Save Image"}
-                                </button>
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="bg-[#111111] border border-zinc-800/60 rounded-2xl p-6 lg:p-8 flex flex-col justify-center shadow-sm">
+                            <h3 className="text-zinc-100 font-semibold text-[15px] mb-1">Format Tips</h3>
+                            <p className="text-zinc-500 text-[13px] mb-6">Choose format based on where you publish and how much detail your design has.</p>
+
+                            <div className="grid md:grid-cols-3 gap-3">
+                                <div className="rounded-lg border border-zinc-800 bg-[#0a0a0a] p-4">
+                                    <p className="text-zinc-100 text-sm font-semibold mb-1">PNG</p>
+                                    <p className="text-zinc-400 text-[12px] leading-relaxed">Best for sharp text, logos, and gradients. Default pick for OG images.</p>
+                                </div>
+                                <div className="rounded-lg border border-zinc-800 bg-[#0a0a0a] p-4">
+                                    <p className="text-zinc-100 text-sm font-semibold mb-1">JPEG</p>
+                                    <p className="text-zinc-400 text-[12px] leading-relaxed">Smaller file size for photo-heavy cards. Slight quality loss from compression.</p>
+                                </div>
+                                <div className="rounded-lg border border-zinc-800 bg-[#0a0a0a] p-4">
+                                    <p className="text-zinc-100 text-sm font-semibold mb-1">WebP</p>
+                                    <p className="text-zinc-400 text-[12px] leading-relaxed">Great compression-to-quality balance. Use if your platform fully supports it.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </main>
         </div>

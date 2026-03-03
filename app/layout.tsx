@@ -1,17 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { GeistPixelSquare } from "geist/font/pixel";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "ogimg.in - Create Beautiful Open Graph Images",
@@ -30,9 +18,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${GeistPixelSquare.variable} antialiased bg-background text-foreground`}
-      >
+      <head>
+        {/* eslint-disable-next-line @next/next/no-css-tags */}
+        <link rel="stylesheet" href="/fonts/fonts.css" />
+      </head>
+      <body className="antialiased bg-background text-foreground">
         {children}
       </body>
     </html>
