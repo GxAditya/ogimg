@@ -21,7 +21,15 @@ export type BackgroundPresetId =
     | "obsidian-iris"
     | "red-velvet"
     | "jade-mirror"
-    | "moon-ice";
+    | "moon-ice"
+    | "topographic"
+    | "diagonal-weave"
+    | "checker-depth"
+    | "sunburst-stage"
+    | "folded-paper"
+    | "prism-facets"
+    | "ripple-rings"
+    | "cinema-stripes";
 
 export interface BackgroundPreset {
     id: BackgroundPresetId;
@@ -218,6 +226,80 @@ export const BACKGROUND_PRESETS: BackgroundPreset[] = [
             "radial-gradient(circle at 76% 20%, rgba(191, 219, 254, 0.72) 0%, rgba(191, 219, 254, 0) 28%)",
             "radial-gradient(circle at 62% 76%, rgba(148, 163, 184, 0.38) 0%, rgba(148, 163, 184, 0) 28%)",
             "linear-gradient(145deg, #e0f2fe 0%, #dbeafe 46%, #e2e8f0 100%)",
+        ].join(","),
+    },
+    {
+        id: "topographic",
+        name: "Topographic",
+        background: [
+            "repeating-radial-gradient(circle at 18% 24%, rgba(255,255,255,0.12) 0 2px, transparent 2px 22px)",
+            "repeating-radial-gradient(circle at 78% 72%, rgba(125,211,252,0.16) 0 2px, transparent 2px 26px)",
+            "repeating-radial-gradient(circle at 52% 50%, rgba(255,255,255,0.08) 0 1px, transparent 1px 32px)",
+            "linear-gradient(145deg, #0f172a 0%, #1e293b 100%)",
+        ].join(","),
+    },
+    {
+        id: "diagonal-weave",
+        name: "Diagonal Weave",
+        background: [
+            "repeating-linear-gradient(135deg, rgba(255,255,255,0.1) 0 2px, transparent 2px 20px)",
+            "repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 24px)",
+            "linear-gradient(135deg, #111827 0%, #4c1d95 50%, #7c3aed 100%)",
+        ].join(","),
+    },
+    {
+        id: "checker-depth",
+        name: "Checker Depth",
+        background: [
+            "repeating-conic-gradient(from 45deg, rgba(255,255,255,0.1) 0deg 25deg, transparent 25deg 50deg) 0 0 / 56px 56px",
+            "radial-gradient(circle at 18% 18%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 20%)",
+            "linear-gradient(145deg, #111827 0%, #374151 100%)",
+        ].join(","),
+    },
+    {
+        id: "sunburst-stage",
+        name: "Sunburst Stage",
+        background: [
+            "repeating-conic-gradient(from 180deg at 50% 115%, rgba(255,255,255,0.14) 0deg 8deg, transparent 8deg 16deg)",
+            "radial-gradient(circle at 50% 18%, rgba(255,255,255,0.58) 0%, rgba(255,255,255,0) 18%)",
+            "linear-gradient(180deg, #431407 0%, #9a3412 100%)",
+        ].join(","),
+    },
+    {
+        id: "folded-paper",
+        name: "Folded Paper",
+        background: [
+            "linear-gradient(135deg, rgba(255,255,255,0) 0 36%, rgba(255,255,255,0.72) 36% 44%, rgba(214,211,209,0.92) 44% 58%, rgba(255,255,255,0) 58%)",
+            "linear-gradient(35deg, rgba(255,255,255,0) 0 48%, rgba(212,212,216,0.68) 48% 54%, rgba(255,255,255,0.74) 54% 64%, rgba(255,255,255,0) 64%)",
+            "linear-gradient(160deg, #fafaf9 0%, #e7e5e4 100%)",
+        ].join(","),
+    },
+    {
+        id: "prism-facets",
+        name: "Prism Facets",
+        background: [
+            "conic-gradient(from 210deg at 18% 20%, rgba(255,255,255,0.22), transparent 30%, rgba(255,255,255,0.1) 52%, transparent 72%)",
+            "conic-gradient(from 140deg at 82% 24%, rgba(192,132,252,0.34), transparent 26%, rgba(59,130,246,0.22) 56%, transparent 74%)",
+            "conic-gradient(from 20deg at 58% 74%, rgba(251,146,60,0.24), transparent 28%, rgba(244,114,182,0.18) 58%, transparent 80%)",
+            "linear-gradient(145deg, #0f172a 0%, #312e81 52%, #1d4ed8 100%)",
+        ].join(","),
+    },
+    {
+        id: "ripple-rings",
+        name: "Ripple Rings",
+        background: [
+            "repeating-radial-gradient(circle at 50% 54%, rgba(255,255,255,0.12) 0 2px, transparent 2px 26px)",
+            "radial-gradient(circle at 50% 54%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 18%)",
+            "linear-gradient(160deg, #111827 0%, #0f766e 54%, #67e8f9 100%)",
+        ].join(","),
+    },
+    {
+        id: "cinema-stripes",
+        name: "Cinema Stripes",
+        background: [
+            "repeating-linear-gradient(115deg, rgba(255,255,255,0.14) 0 18px, rgba(255,255,255,0) 18px 56px)",
+            "linear-gradient(180deg, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0.2) 100%)",
+            "linear-gradient(145deg, #111827 0%, #7c2d12 48%, #f97316 100%)",
         ].join(","),
     },
 ];
