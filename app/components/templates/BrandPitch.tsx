@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    DEFAULT_BACKGROUND_PRESET_ID,
     TemplateProps,
     clampGridBlur,
     getBackgroundFill,
@@ -26,6 +27,7 @@ export default function BrandPitch({
     gradientStart = "#0F172A",
     gradientEnd = "#1E293B",
     gradientAngle = 136,
+    backgroundPresetId = DEFAULT_BACKGROUND_PRESET_ID,
     gridOverlay = "none",
     gridColor = "#94A3B8",
     gridOpacity = 0.14,
@@ -35,7 +37,7 @@ export default function BrandPitch({
     const subheading = (tag || "").trim();
     const benefitLines = [detailOne, detailTwo, detailThree].map((line) => line?.trim() || "").filter(Boolean);
 
-    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle);
+    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle, backgroundPresetId);
     const overlayStyle = getGridOverlayStyle(gridOverlay, gridColor, gridOpacity);
     const clampedGridBlur = clampGridBlur(gridBlur);
     const headlineWeight = resolveFontWeight(fontWeight, 740);

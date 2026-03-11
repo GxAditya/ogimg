@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    DEFAULT_BACKGROUND_PRESET_ID,
     TemplateProps,
     clampGridBlur,
     getBackgroundFill,
@@ -25,6 +26,7 @@ export default function BlogPost({
     gradientStart = "#F7F0DB",
     gradientEnd = "#E5D7B8",
     gradientAngle = 130,
+    backgroundPresetId = DEFAULT_BACKGROUND_PRESET_ID,
     gridOverlay = "none",
     gridColor = "#6B7280",
     gridOpacity = 0.15,
@@ -34,7 +36,7 @@ export default function BlogPost({
     const brandLabel = (logo || "").trim();
     const tagLabel = (tag || "").trim();
     const brandMark = getBrandMark(brandLabel, tagLabel);
-    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle);
+    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle, backgroundPresetId);
     const overlayStyle = getGridOverlayStyle(gridOverlay, gridColor, gridOpacity);
     const clampedGridBlur = clampGridBlur(gridBlur);
     const headlineWeight = resolveFontWeight(fontWeight, 700);

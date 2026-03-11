@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    DEFAULT_BACKGROUND_PRESET_ID,
     TemplateProps,
     clampGridBlur,
     getBackgroundFill,
@@ -22,6 +23,7 @@ export default function AppShowcase({
     gradientStart = "#F3F4F6",
     gradientEnd = "#D1D5DB",
     gradientAngle = 136,
+    backgroundPresetId = DEFAULT_BACKGROUND_PRESET_ID,
     gridOverlay = "none",
     gridColor = "#6B7280",
     gridOpacity = 0.12,
@@ -31,7 +33,7 @@ export default function AppShowcase({
     const brandTagline = (title || "").trim();
     const hasImage = Boolean(image);
 
-    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle);
+    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle, backgroundPresetId);
     const overlayStyle = getGridOverlayStyle(gridOverlay, gridColor, gridOpacity);
     const clampedGridBlur = clampGridBlur(gridBlur);
     const brandWeight = resolveFontWeight(fontWeight, 640);

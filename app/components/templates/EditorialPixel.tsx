@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    DEFAULT_BACKGROUND_PRESET_ID,
     TemplateProps,
     getBackgroundFill,
     getGridOverlayStyle,
@@ -23,6 +24,7 @@ export default function EditorialPixel({
     gradientStart = "#1A1F36",
     gradientEnd = "#5B3B8F",
     gradientAngle = 140,
+    backgroundPresetId = DEFAULT_BACKGROUND_PRESET_ID,
     gridOverlay = "dots",
     gridColor = "#FBCFE8",
     gridOpacity = 0.24,
@@ -32,7 +34,7 @@ export default function EditorialPixel({
     const supportLine = (logo || "").trim();
     const ctaLine = (detailOne || "").trim();
 
-    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle);
+    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle, backgroundPresetId);
     const overlayStyle = getGridOverlayStyle(gridOverlay, gridColor, gridOpacity);
     const clampedGridBlur = clampGridBlur(gridBlur);
     const headlineWeight = resolveFontWeight(fontWeight, 720);

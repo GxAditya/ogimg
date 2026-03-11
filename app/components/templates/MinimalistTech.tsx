@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    DEFAULT_BACKGROUND_PRESET_ID,
     TemplateProps,
     clampGridBlur,
     getBackgroundFill,
@@ -23,6 +24,7 @@ export default function MinimalistTech({
     gradientStart = "#8B95A8",
     gradientEnd = "#3D475A",
     gradientAngle = 120,
+    backgroundPresetId = DEFAULT_BACKGROUND_PRESET_ID,
     gridOverlay = "grid",
     gridColor = "#6B7280",
     gridOpacity = 0.4,
@@ -31,7 +33,7 @@ export default function MinimalistTech({
     const hasImage = Boolean(image);
     const tagLabel = (tag || "").trim();
     const clampedGridBlur = clampGridBlur(gridBlur);
-    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle);
+    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle, backgroundPresetId);
     const overlayStyle = getGridOverlayStyle(gridOverlay, gridColor, gridOpacity);
     const mutedTextColor = hexToRgba(textColor, 0.72);
 

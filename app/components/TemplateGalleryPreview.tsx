@@ -59,6 +59,7 @@ export default function TemplateGalleryPreview({
         gradientStart: defaults.gradientStart,
         gradientEnd: defaults.gradientEnd,
         gradientAngle: defaults.gradientAngle,
+        backgroundPresetId: defaults.backgroundPresetId,
         gridOverlay: defaults.gridOverlay,
         gridColor: defaults.gridColor,
         gridOpacity: defaults.gridOpacity,
@@ -105,4 +106,3 @@ export default function TemplateGalleryPreview({
         </div>
     );
 }
-

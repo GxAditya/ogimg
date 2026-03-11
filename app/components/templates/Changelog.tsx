@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    DEFAULT_BACKGROUND_PRESET_ID,
     TemplateProps,
     clampGridBlur,
     getBackgroundFill,
@@ -26,6 +27,7 @@ export default function Changelog({
     gradientStart = "#0A1015",
     gradientEnd = "#1F3C53",
     gradientAngle = 130,
+    backgroundPresetId = DEFAULT_BACKGROUND_PRESET_ID,
     gridOverlay = "graph",
     gridColor = "#34D399",
     gridOpacity = 0.2,
@@ -33,7 +35,7 @@ export default function Changelog({
 }: TemplateProps) {
     const brandLabel = (logo || "").trim();
     const footerCta = (tag || "").trim();
-    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle);
+    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle, backgroundPresetId);
     const overlayStyle = getGridOverlayStyle(gridOverlay, gridColor, gridOpacity);
     const clampedGridBlur = clampGridBlur(gridBlur);
     const headingWeight = resolveFontWeight(fontWeight, 680);

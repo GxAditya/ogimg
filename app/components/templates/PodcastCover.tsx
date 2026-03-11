@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    DEFAULT_BACKGROUND_PRESET_ID,
     TemplateProps,
     clampGridBlur,
     getBackgroundFill,
@@ -24,6 +25,7 @@ export default function PodcastCover({
     gradientStart = "#1A1142",
     gradientEnd = "#5F31B0",
     gradientAngle = 145,
+    backgroundPresetId = DEFAULT_BACKGROUND_PRESET_ID,
     gridOverlay = "dots",
     gridColor = "#A78BFA",
     gridOpacity = 0.28,
@@ -32,7 +34,7 @@ export default function PodcastCover({
     const hasImage = Boolean(image);
     const brandLabel = (logo || "").trim();
     const tagLabel = (tag || "").trim();
-    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle);
+    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle, backgroundPresetId);
     const overlayStyle = getGridOverlayStyle(gridOverlay, gridColor, gridOpacity);
     const clampedGridBlur = clampGridBlur(gridBlur);
     const headlineWeight = resolveFontWeight(fontWeight, 760);

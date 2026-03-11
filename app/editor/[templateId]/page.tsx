@@ -2,6 +2,14 @@ import { notFound } from "next/navigation";
 import Editor from "../../components/Editor";
 import { TEMPLATE_LIBRARY, TemplateId } from "../../components/templates/templateRegistry";
 
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+    return TEMPLATE_LIBRARY.map((template) => ({
+        templateId: template.id,
+    }));
+}
+
 export default async function TemplateEditorPage({
     params,
 }: {

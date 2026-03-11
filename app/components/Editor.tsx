@@ -21,29 +21,59 @@ import {
     TEMPLATE_FONT_OPTIONS,
     TemplateFontId,
 } from "./templates/fontCatalog";
-import { BackgroundMode, GridOverlay, TemplateProps } from "./templates/templateShared";
+import {
+    BACKGROUND_PRESETS,
+    BackgroundMode,
+    DEFAULT_BACKGROUND_PRESET_ID,
+    GridOverlay,
+    TemplateProps,
+} from "./templates/templateShared";
 
 type ExportFormat = "png" | "jpeg" | "webp";
 type EditorPanel = "save-image" | "format-tips";
 
 const COLOR_PRESETS = [
     ["#020617", "#111827"],
+    ["#0F2027", "#203A43"],
+    ["#2C3E50", "#4CA1AF"],
+    ["#16222A", "#3A6073"],
+    ["#42275A", "#734B6D"],
+    ["#642B73", "#C6426E"],
+    ["#CC2B5E", "#753A88"],
+    ["#1A2980", "#26D0CE"],
+    ["#2193B0", "#6DD5ED"],
+    ["#36D1DC", "#5B86E5"],
+    ["#4E54C8", "#8F94FB"],
+    ["#614385", "#516395"],
+    ["#0B132B", "#3A506B"],
+    ["#3B82F6", "#14B8A6"],
     ["#f43f5e", "#f59e0b"],
     ["#f97316", "#ef4444"],
+    ["#FF7E5F", "#FEB47B"],
+    ["#FF8008", "#FFC837"],
+    ["#F7971E", "#FFD200"],
     ["#fb7185", "#f43f5e"],
     ["#fb7185", "#f97393"],
     ["#fb7185", "#fbbf24"],
+    ["#F953C6", "#B91D73"],
+    ["#C33764", "#1D2671"],
     ["#f97316", "#fdba74"],
     ["#f8b4c6", "#fef3c7"],
     ["#c4b5fd", "#fde68a"],
     ["#4f46e5", "#22d3ee"],
     ["#8b5cf6", "#6ee7b7"],
+    ["#7F00FF", "#E100FF"],
+    ["#00C6FF", "#0072FF"],
+    ["#4568DC", "#B06AB3"],
+    ["#654EA3", "#EAafC8"],
     ["#f59e0b", "#a78bfa"],
     ["#a78bfa", "#8b5cf6"],
     ["#d8b4fe", "#93c5fd"],
     ["#9333ea", "#c084fc"],
     ["#60a5fa", "#bfdbfe"],
     ["#06b6d4", "#67e8f9"],
+    ["#43C6AC", "#F8FFAE"],
+    ["#348F50", "#56B4D3"],
     ["#16a34a", "#22c55e"],
     ["#10b981", "#84cc16"],
     ["#22d3ee", "#4ade80"],
@@ -52,6 +82,8 @@ const COLOR_PRESETS = [
     ["#67e8f9", "#86efac"],
     ["#a7f3d0", "#d9f99d"],
     ["#bbf7d0", "#fef9c3"],
+    ["#F1F2B5", "#135058"],
+    ["#7DCE82", "#5B8C5A"],
     ["#09090b", "#27272a"],
     ["#1e293b", "#334155"],
     ["#4b5563", "#9ca3af"],
@@ -60,6 +92,62 @@ const COLOR_PRESETS = [
     ["#d1d5db", "#f8fafc"],
     ["#cbd5e1", "#f1f5f9"],
     ["#e7e5e4", "#fafaf9"],
+    ["#2B2D42", "#8D99AE"],
+    ["#3A3A3A", "#BDBBBE"],
+    ["#1F1C2C", "#928DAB"],
+    ["#5D4157", "#A8CABA"],
+] as const;
+
+const SOLID_COLOR_PRESETS = [
+    "#020617",
+    "#111827",
+    "#0F172A",
+    "#1E293B",
+    "#334155",
+    "#172554",
+    "#1D4ED8",
+    "#312E81",
+    "#4C1D95",
+    "#6D28D9",
+    "#7C3AED",
+    "#9333EA",
+    "#A855F7",
+    "#581C87",
+    "#9D174D",
+    "#BE185D",
+    "#E11D48",
+    "#FB7185",
+    "#7F1D1D",
+    "#991B1B",
+    "#EA580C",
+    "#F97316",
+    "#C2410C",
+    "#CA8A04",
+    "#EAB308",
+    "#713F12",
+    "#15803D",
+    "#166534",
+    "#22C55E",
+    "#84CC16",
+    "#0F766E",
+    "#14B8A6",
+    "#0369A1",
+    "#0EA5E9",
+    "#38BDF8",
+    "#155E75",
+    "#164E63",
+    "#3F3F46",
+    "#52525B",
+    "#71717A",
+    "#A1A1AA",
+    "#D4D4D8",
+    "#E5E7EB",
+    "#F5F5F4",
+    "#F8FAFC",
+    "#FFF7ED",
+    "#FEF2F2",
+    "#FDF4FF",
+    "#ECFEFF",
 ] as const;
 
 const GRID_PATTERN_OPTIONS: Array<{ label: string; value: GridOverlay }> = [
@@ -237,6 +325,7 @@ export default function Editor({
     const [gradientStart, setGradientStart] = useState(defaults.gradientStart);
     const [gradientEnd, setGradientEnd] = useState(defaults.gradientEnd);
     const [gradientAngle, setGradientAngle] = useState(defaults.gradientAngle);
+    const [backgroundPresetId, setBackgroundPresetId] = useState(defaults.backgroundPresetId ?? DEFAULT_BACKGROUND_PRESET_ID);
     const [gridOverlay, setGridOverlay] = useState<GridOverlay>(defaults.gridOverlay);
     const [gridColor, setGridColor] = useState(defaults.gridColor);
     const [gridOpacity, setGridOpacity] = useState(defaults.gridOpacity);
@@ -267,7 +356,10 @@ export default function Editor({
             ? "Brand Name"
             : templateId === "centered-container"
                 ? "Logo Mark"
-            : "Logo Text";
+                : "Logo Text";
+    const isGradientMode = bgMode === "Gradient";
+    const isSolidColorMode = bgMode === "Solid Color";
+    const isBackgroundPresetMode = bgMode === "Background";
 
     const previewContainerRef = useRef<HTMLDivElement>(null);
     const logoInputRef = useRef<HTMLInputElement>(null);
@@ -672,6 +764,7 @@ ${inlineFontCss}
         gradientStart,
         gradientEnd,
         gradientAngle,
+        backgroundPresetId,
         gridOverlay,
         gridColor,
         gridOpacity,
@@ -973,54 +1066,117 @@ ${inlineFontCss}
 
                         <div className="flex bg-[#0a0a0a] p-1 rounded-lg border border-zinc-800/80 mb-6 w-max">
                             <button
+                                type="button"
                                 onClick={() => setBgMode("Gradient")}
-                                className={`px-4 py-1.5 text-[13px] tracking-wide rounded-md ${bgMode === "Gradient" ? "bg-[#1f1f1f] text-white" : "text-zinc-400 hover:text-zinc-200"}`}
+                                className={`px-4 py-1.5 text-[13px] tracking-wide rounded-md ${isGradientMode ? "bg-[#1f1f1f] text-white" : "text-zinc-400 hover:text-zinc-200"}`}
                             >
                                 Gradient
                             </button>
                             <button
+                                type="button"
                                 onClick={() => setBgMode("Solid Color")}
-                                className={`px-4 py-1.5 text-[13px] tracking-wide rounded-md ${bgMode === "Solid Color" ? "bg-[#1f1f1f] text-white" : "text-zinc-400 hover:text-zinc-200"}`}
+                                className={`px-4 py-1.5 text-[13px] tracking-wide rounded-md ${isSolidColorMode ? "bg-[#1f1f1f] text-white" : "text-zinc-400 hover:text-zinc-200"}`}
                             >
                                 Solid Color
                             </button>
+                            <button
+                                type="button"
+                                onClick={() => setBgMode("Background")}
+                                className={`px-4 py-1.5 text-[13px] tracking-wide rounded-md ${isBackgroundPresetMode ? "bg-[#1f1f1f] text-white" : "text-zinc-400 hover:text-zinc-200"}`}
+                            >
+                                Background
+                            </button>
                         </div>
 
-                        <div className="grid grid-cols-8 gap-2 mb-8">
-                            {COLOR_PRESETS.map(([start, end], i) => {
-                                const isActive = gradientStart === start && gradientEnd === end;
-                                return (
-                                    <button
-                                        type="button"
-                                        key={i}
-                                        onClick={() => {
-                                            setGradientStart(start);
-                                            setGradientEnd(end);
-                                        }}
-                                        className={`w-full aspect-square rounded cursor-pointer ring-1 ring-white/5 hover:scale-110 transition-transform ${isActive ? "ring-2 ring-white/70" : ""}`}
-                                        style={{
-                                            background: `linear-gradient(135deg, ${start}, ${end})`,
-                                        }}
-                                    />
-                                );
-                            })}
-                        </div>
+                        {isGradientMode && (
+                            <>
+                                <div className="grid grid-cols-8 gap-2 mb-8">
+                                    {COLOR_PRESETS.map(([start, end], i) => {
+                                        const isActive = gradientStart === start && gradientEnd === end;
+                                        return (
+                                            <button
+                                                type="button"
+                                                key={i}
+                                                onClick={() => {
+                                                    setGradientStart(start);
+                                                    setGradientEnd(end);
+                                                }}
+                                                className={`w-full aspect-square rounded cursor-pointer ring-1 ring-white/5 hover:scale-110 transition-transform ${isActive ? "ring-2 ring-white/70" : ""}`}
+                                                style={{
+                                                    background: `linear-gradient(135deg, ${start}, ${end})`,
+                                                }}
+                                                aria-label={`Set gradient ${start} to ${end}`}
+                                            />
+                                        );
+                                    })}
+                                </div>
 
-                        <div className="mb-8">
-                            <label className="text-[13px] font-medium text-zinc-300 mb-3 block">Gradient Direction</label>
-                            <div className="grid grid-cols-8 gap-1.5">
-                                {GRADIENT_DIRECTIONS.map(({ label, angle }) => (
-                                    <button
-                                        key={label}
-                                        type="button"
-                                        onClick={() => setGradientAngle(angle)}
-                                        className={`w-full aspect-square flex items-center justify-center rounded-lg border ${gradientAngle === angle ? "border-zinc-400 text-zinc-200 bg-[#1f1f1f]" : "border-zinc-800/80 bg-[#0a0a0a] text-zinc-500 hover:bg-zinc-800"}`}
-                                    >
-                                        {label}
-                                    </button>
-                                ))}
+                                <div className="mb-8">
+                                    <label className="text-[13px] font-medium text-zinc-300 mb-3 block">Gradient Direction</label>
+                                    <div className="grid grid-cols-8 gap-1.5">
+                                        {GRADIENT_DIRECTIONS.map(({ label, angle }) => (
+                                            <button
+                                                key={label}
+                                                type="button"
+                                                onClick={() => setGradientAngle(angle)}
+                                                className={`w-full aspect-square flex items-center justify-center rounded-lg border ${gradientAngle === angle ? "border-zinc-400 text-zinc-200 bg-[#1f1f1f]" : "border-zinc-800/80 bg-[#0a0a0a] text-zinc-500 hover:bg-zinc-800"}`}
+                                            >
+                                                {label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {isSolidColorMode && (
+                            <div className="mb-8">
+                                <label className="text-[13px] font-medium text-zinc-300 mb-3 block">Solid Color</label>
+                                <div className="grid grid-cols-8 gap-2">
+                                    {SOLID_COLOR_PRESETS.map((color) => {
+                                        const isActive = gradientStart === color && gradientEnd === color;
+                                        return (
+                                            <button
+                                                key={color}
+                                                type="button"
+                                                onClick={() => {
+                                                    setGradientStart(color);
+                                                    setGradientEnd(color);
+                                                }}
+                                                className={`w-full aspect-square rounded-lg border transition-transform hover:scale-105 ${isActive ? "border-zinc-100 ring-1 ring-zinc-100/40" : "border-zinc-800/80"}`}
+                                                style={{ backgroundColor: color }}
+                                                aria-label={`Set solid color ${color}`}
+                                            />
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
+                        )}
+
+                        {isBackgroundPresetMode && (
+                            <div className="mb-8">
+                                <label className="text-[13px] font-medium text-zinc-300 mb-3 block">Preset Backgrounds</label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {BACKGROUND_PRESETS.map((preset) => {
+                                        const isActive = backgroundPresetId === preset.id;
+                                        return (
+                                            <button
+                                                key={preset.id}
+                                                type="button"
+                                                onClick={() => setBackgroundPresetId(preset.id)}
+                                                className={`rounded-xl border p-2 text-left transition-colors ${isActive ? "border-zinc-100 bg-zinc-900/70" : "border-zinc-800/80 bg-[#0a0a0a] hover:border-zinc-700"}`}
+                                            >
+                                                <div
+                                                    className="h-24 rounded-lg border border-white/10"
+                                                    style={{ background: preset.background }}
+                                                />
+                                                <p className="mt-3 px-1 text-[13px] font-medium text-zinc-100">{preset.name}</p>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
 
                         <div className="space-y-5">
                             <div>

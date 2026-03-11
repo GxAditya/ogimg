@@ -1,4 +1,5 @@
-import type { BackgroundMode, GridOverlay } from "./templateShared";
+import type { BackgroundMode, BackgroundPresetId, GridOverlay } from "./templateShared";
+import { DEFAULT_BACKGROUND_PRESET_ID } from "./templateShared";
 
 export type TemplateId =
     | "minimalist-tech"
@@ -25,6 +26,7 @@ export interface TemplateDefaults {
     gradientStart: string;
     gradientEnd: string;
     gradientAngle: number;
+    backgroundPresetId: BackgroundPresetId;
     gridOverlay: GridOverlay;
     gridColor: string;
     gridOpacity: number;
@@ -60,6 +62,7 @@ export const TEMPLATE_LIBRARY: TemplateDefinition[] = [
             gradientStart: "#8B95A8",
             gradientEnd: "#3D475A",
             gradientAngle: 120,
+            backgroundPresetId: DEFAULT_BACKGROUND_PRESET_ID,
             gridOverlay: "grid",
             gridColor: "#E5E7EB",
             gridOpacity: 0.24,
@@ -83,6 +86,7 @@ export const TEMPLATE_LIBRARY: TemplateDefinition[] = [
             gradientStart: "#F3F4F6",
             gradientEnd: "#D1D5DB",
             gradientAngle: 136,
+            backgroundPresetId: DEFAULT_BACKGROUND_PRESET_ID,
             gridOverlay: "none",
             gridColor: "#6B7280",
             gridOpacity: 0.12,
@@ -106,6 +110,7 @@ export const TEMPLATE_LIBRARY: TemplateDefinition[] = [
             gradientStart: "#1E293B",
             gradientEnd: "#0F172A",
             gradientAngle: 140,
+            backgroundPresetId: DEFAULT_BACKGROUND_PRESET_ID,
             gridOverlay: "none",
             gridColor: "#94A3B8",
             gridOpacity: 0.16,
@@ -132,6 +137,7 @@ export const TEMPLATE_LIBRARY: TemplateDefinition[] = [
             gradientStart: "#0F172A",
             gradientEnd: "#1E293B",
             gradientAngle: 136,
+            backgroundPresetId: DEFAULT_BACKGROUND_PRESET_ID,
             gridOverlay: "none",
             gridColor: "#94A3B8",
             gridOpacity: 0.14,
@@ -156,6 +162,7 @@ export const TEMPLATE_LIBRARY: TemplateDefinition[] = [
             gradientStart: "#1A1F36",
             gradientEnd: "#5B3B8F",
             gradientAngle: 140,
+            backgroundPresetId: DEFAULT_BACKGROUND_PRESET_ID,
             gridOverlay: "dots",
             gridColor: "#FBCFE8",
             gridOpacity: 0.24,
@@ -181,6 +188,7 @@ export const TEMPLATE_LIBRARY: TemplateDefinition[] = [
             gradientStart: "#081120",
             gradientEnd: "#172554",
             gradientAngle: 125,
+            backgroundPresetId: DEFAULT_BACKGROUND_PRESET_ID,
             gridOverlay: "graph",
             gridColor: "#60A5FA",
             gridOpacity: 0.2,
@@ -204,6 +212,7 @@ export const TEMPLATE_LIBRARY: TemplateDefinition[] = [
             gradientStart: "#F7F0DB",
             gradientEnd: "#E5D7B8",
             gradientAngle: 130,
+            backgroundPresetId: DEFAULT_BACKGROUND_PRESET_ID,
             gridOverlay: "none",
             gridColor: "#6B7280",
             gridOpacity: 0.15,
@@ -227,6 +236,7 @@ export const TEMPLATE_LIBRARY: TemplateDefinition[] = [
             gradientStart: "#1A1142",
             gradientEnd: "#5F31B0",
             gradientAngle: 145,
+            backgroundPresetId: DEFAULT_BACKGROUND_PRESET_ID,
             gridOverlay: "dots",
             gridColor: "#A78BFA",
             gridOpacity: 0.28,
@@ -253,6 +263,7 @@ export const TEMPLATE_LIBRARY: TemplateDefinition[] = [
             gradientStart: "#0A1015",
             gradientEnd: "#1F3C53",
             gradientAngle: 130,
+            backgroundPresetId: DEFAULT_BACKGROUND_PRESET_ID,
             gridOverlay: "graph",
             gridColor: "#34D399",
             gridOpacity: 0.2,

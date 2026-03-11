@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    DEFAULT_BACKGROUND_PRESET_ID,
     TemplateProps,
     clampGridBlur,
     getBackgroundFill,
@@ -22,6 +23,7 @@ export default function CenteredContainer({
     gradientStart = "#1E293B",
     gradientEnd = "#0F172A",
     gradientAngle = 140,
+    backgroundPresetId = DEFAULT_BACKGROUND_PRESET_ID,
     gridOverlay = "none",
     gridColor = "#94A3B8",
     gridOpacity = 0.16,
@@ -29,7 +31,7 @@ export default function CenteredContainer({
 }: TemplateProps) {
     const subtext = (tag || "").trim();
 
-    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle);
+    const backgroundFill = getBackgroundFill(backgroundMode, gradientStart, gradientEnd, gradientAngle, backgroundPresetId);
     const overlayStyle = getGridOverlayStyle(gridOverlay, gridColor, gridOpacity);
     const clampedGridBlur = clampGridBlur(gridBlur);
     const headlineWeight = resolveFontWeight(fontWeight, 760);
