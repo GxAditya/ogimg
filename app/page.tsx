@@ -19,6 +19,7 @@ import { GeistPixelSquare } from "geist/font/pixel";
 import { motion, AnimatePresence, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { TEMPLATE_LIBRARY } from "./components/templates/templateRegistry";
 import TemplateGalleryPreview from "./components/TemplateGalleryPreview";
+import { CHANGELOG_ENTRIES } from "./components/changelogData";
 
 type ResultShot = {
   id: number;
@@ -193,6 +194,7 @@ function ResultMeteorCard({ shot, progress, index, total }: ResultMeteorCardProp
 export default function LandingPage() {
   const [activeFAQ, setActiveFAQ] = useState<number | null>(null);
   const marqueeTemplates = [...TEMPLATE_LIBRARY, ...TEMPLATE_LIBRARY];
+  const latestChangelogEntries = CHANGELOG_ENTRIES.slice(0, 2);
   const resultsSectionRef = useRef<HTMLElement | null>(null);
   const { scrollYProgress } = useScroll({
     target: resultsSectionRef,
@@ -433,6 +435,56 @@ export default function LandingPage() {
               <h3 className="text-xl font-bold mb-2">3. Download</h3>
               <p className="text-zinc-400 tracking-tight text-sm">Grab your PNG or JPG file instantly. Attach it to your head tags and you run!</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 bg-[#0a0a0a] border-t border-zinc-900/80">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
+            <div>
+              <p className="text-xs uppercase tracking-[0.24em] text-zinc-500 mb-3">Changelog</p>
+              <h2 className={`text-3xl md:text-5xl font-bold ${GeistPixelSquare.className} tracking-[-0.05em]`}>
+                Latest Updates
+              </h2>
+              <p className="text-zinc-400 mt-4 max-w-2xl">
+                Shipped changes grouped the way release notes should read: what&apos;s new, what improved, and what got fixed.
+              </p>
+            </div>
+            <Link href="/changelog" className="text-sm text-zinc-400 hover:text-zinc-100 transition-colors">
+              View full changelog
+            </Link>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-4">
+            {latestChangelogEntries.map((entry) => (
+              <article key={entry.version} className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
+                <div className="flex items-start justify-between gap-4 mb-5">
+                  <div>
+                    <p className="text-lg font-semibold">{entry.version}</p>
+                    <p className="text-sm text-zinc-500 mt-1">{entry.summary}</p>
+                  </div>
+                  <p className="text-xs text-zinc-500 whitespace-nowrap">{entry.date}</p>
+                </div>
+
+                <div className="space-y-5">
+                  {entry.groups.map((group) => (
+                    <section key={`${entry.version}-${group.label}`}>
+                      <h3 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500 mb-3">
+                        {group.label}
+                      </h3>
+                      <ul className="space-y-2 text-sm text-zinc-300">
+                        {group.items.map((item) => (
+                          <li key={item} className="leading-relaxed">
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
