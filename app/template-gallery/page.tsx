@@ -1,8 +1,22 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { GeistPixelSquare } from "geist/font/pixel";
 import { TEMPLATE_LIBRARY } from "../components/templates/templateRegistry";
 import TemplateGalleryPreview from "../components/TemplateGalleryPreview";
+import { createMetadata } from "../lib/seo";
+
+export const metadata: Metadata = createMetadata({
+    title: "Template Gallery",
+    description: "Browse ready-to-edit Open Graph image templates for product launches, blog posts, changelogs, podcasts, and more.",
+    path: "/template-gallery",
+    keywords: [
+        "open graph templates",
+        "og image templates",
+        "social card templates",
+        "blog og image templates",
+    ],
+});
 
 export default function TemplateGalleryPage() {
     return (

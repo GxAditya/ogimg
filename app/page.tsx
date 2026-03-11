@@ -20,6 +20,7 @@ import { motion, AnimatePresence, useScroll, useTransform, type MotionValue } fr
 import { TEMPLATE_LIBRARY } from "./components/templates/templateRegistry";
 import TemplateGalleryPreview from "./components/TemplateGalleryPreview";
 import { CHANGELOG_ENTRIES } from "./components/changelogData";
+import { SITE_NAME, SITE_URL } from "./lib/seo";
 
 type ResultShot = {
   id: number;
@@ -229,8 +230,47 @@ export default function LandingPage() {
     }
   ];
 
+  const softwareApplicationSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: SITE_NAME,
+    applicationCategory: "DesignApplication",
+    applicationSubCategory: "Open Graph Image Generator",
+    operatingSystem: "Web",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD"
+    },
+    url: SITE_URL,
+    description: "Create beautiful Open Graph images in your browser using editable templates, custom backgrounds, and fast exports.",
+    image: `${SITE_URL}/ogimg-og.png`,
+    sameAs: ["https://github.com/GxAditya/ogimg"]
+  };
+
+  const faqPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.a
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-zinc-100 font-sans selection:bg-zinc-200 selection:text-zinc-900 tracking-[-0.04em]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageSchema) }}
+      />
       <nav className="absolute top-0 inset-x-0 z-50 bg-transparent">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 w-1/3">

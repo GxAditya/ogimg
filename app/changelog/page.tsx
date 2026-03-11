@@ -1,7 +1,22 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { GeistPixelSquare } from "geist/font/pixel";
 import { CHANGELOG_ENTRIES } from "../components/changelogData";
+import { createMetadata } from "../lib/seo";
+
+export const metadata: Metadata = createMetadata({
+    title: "Changelog",
+    description: "Track new features, improvements, and fixes shipped to ogimg.in.",
+    path: "/changelog",
+    keywords: [
+        "ogimg changelog",
+        "product updates",
+        "release notes",
+        "open graph image generator updates",
+    ],
+    type: "article",
+});
 
 export default function ChangelogPage() {
     return (
